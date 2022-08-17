@@ -13,7 +13,7 @@
 #/        - commit tag
 #/        - 'HEAD'
 #/     Interval examples:
-#/        - bc483c1..HEAD
+#/        - bc483c1..HEAD (equals to bc483c1..)
 #/        - v1.0.1..v1.1.0
 #/
 #/ Options:
@@ -32,6 +32,10 @@
 # Current generator version
 RELEASE_NOTES_GENERATOR_VERSION='0.1.0'
 
+# generator global variables (Please don't modify!)
+REPO_HTTP_URL=''
+ALL_COMMITS=''
+RELEASE_NOTES=''
 
 # Output colors
 APP_NAME='gen-release-notes'
@@ -91,14 +95,47 @@ function _get_initial_commit_reference() {
   git rev-list --max-parents=0 HEAD
 }
 
+function _get_repo_url() {
+#  git@github.com:Greewil/one-line-installer.git
+  url=$(git remote get-url origin)
+  if [[ "$url" = 'git@'* ]]; then
+    url="${url/git@/}"
+    url="${url/:/\/}"
+    url="https://${url/.git/}"
+    REPO_HTTP_URL="$url"
+  else
+    REPO_HTTP_URL="$url"
+  fi
+}
+
+function _get_commit_tags() {
+  ALL_COMMITS=$(git log "$SPECIFIED_INTERVAL" --oneline --pretty=format:%H) || exit 1
+#  echo "$ALL_COMMITS"
+}
+
+function _get_commit_info_by_name() {
+  commit_hash=$1
+  format=$2
+  git log "$commit_hash" -n 1 --pretty=format:"$format"
+}
+
+function _get_commit_titles() {
+  echo TODO # TODO
+}
+
 function get_raw_logs() {
-#  SPECIFIED_INTERVAL=''
+  _show_function_title "raw release notes:"
   git log "$SPECIFIED_INTERVAL" --oneline --pretty=format:%s
 }
 
 function get_short_release_notes() {
-  echo 'get_short_release_notes'
-  # TODO
+  _show_function_title "short release notes:"
+  _get_commit_tags
+  echo "$ALL_COMMITS" | while read -r line; do
+    commit_title=$(_get_commit_info_by_name "$line" '"%s"')
+    commit_link="[commit]($REPO_HTTP_URL/commit/$line)"
+    printf "\n%s\n" "$commit_title $commit_link"
+  done
 }
 
 function get_default_release_notes() {
@@ -143,6 +180,8 @@ while [[ $# -gt 0 ]]; do
     exit 1 ;;
   esac
 done
+
+_get_repo_url
 
 case "$COMMAND" in
 --help)
