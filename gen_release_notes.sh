@@ -20,6 +20,10 @@
 #/     -r, --raw-logs           show only list of commit titles
 #/     -s, --short              show only titles of commits without message body
 #/     -f <file_name>           save output to file
+#/     -a, --all-commits        release notes will be generated from all commits which are inside of specified interval
+#/                              (by default release notes will be generated only from conventional commits)
+#/     --single-list            release notes will be generated as single list of commit messages
+#/                              (by default log messages will be grouped by conventional commit tags)
 #/
 #/     Mutually exclusive parameters: short, raw-logs
 #/
@@ -32,9 +36,14 @@
 # Current generator version
 RELEASE_NOTES_GENERATOR_VERSION='0.1.0'
 
+# all conventional commit tags (Please don't modify!)
+CONVENTIONAL_COMMIT_TAGS=('build' 'ci' 'chore' 'docs' 'feat' 'fix' 'pref' 'refactor' 'revert' 'style' 'test')
+
 # generator global variables (Please don't modify!)
 REPO_HTTP_URL=''
 ALL_COMMITS=''
+RELEASE_NOTES_TAG_GROUPS=('' '' '' '' '' '' '' '' '' '' '') # for each CONVENTIONAL_COMMIT_TAGS
+NO_TAG_COMMITS=''                                           # for commits without tags
 RELEASE_NOTES=''
 
 # Output colors
@@ -46,15 +55,14 @@ BROWN='\e[0;33m'      # for inputs
 LIGHT_CYAN='\e[1;36m' # for changes
 
 # Console input variables (Please don't modify!)
-# command type:
 COMMAND=''
-# data input:
 SPECIFIED_INTERVAL=''
 SPECIFIED_OUTPUT_FILE=''
-# arguments:
 ARGUMENT_SHORT='false'
 ARGUMENT_RAW='false'
 ARGUMENT_SAVE_OUTPUT='false'
+ARGUMENT_ALL_COMMITS='false'
+ARGUMENT_SINGLE_LIST='false'
 
 
 function _show_function_title() {
@@ -96,7 +104,6 @@ function _get_initial_commit_reference() {
 }
 
 function _get_repo_url() {
-#  git@github.com:Greewil/one-line-installer.git
   url=$(git remote get-url origin)
   if [[ "$url" = 'git@'* ]]; then
     url="${url/git@/}"
@@ -108,19 +115,82 @@ function _get_repo_url() {
   fi
 }
 
-function _get_commit_tags() {
-  ALL_COMMITS=$(git log "$SPECIFIED_INTERVAL" --oneline --pretty=format:%H) || exit 1
-#  echo "$ALL_COMMITS"
+function _get_tag_index_by_commit_title() {
+  title=$1
+  for i in "${!CONVENTIONAL_COMMIT_TAGS[@]}"; do
+    [[ "$title" = "${CONVENTIONAL_COMMIT_TAGS[$i]}"* ]] && echo "$i"
+  done
 }
 
-function _get_commit_info_by_name() {
+function _collect_all_commits() {
+  ALL_COMMITS=$(git log "$SPECIFIED_INTERVAL" --oneline --pretty=format:%H) || return 1
+}
+
+function _get_commit_info_by_hash() {
   commit_hash=$1
   format=$2
   git log "$commit_hash" -n 1 --pretty=format:"$format"
 }
 
-function _get_commit_titles() {
-  echo TODO # TODO
+function _get_log_message() {
+  commit_hash=$1
+  commit_title=$2
+  additional_info_format=$3
+  commit_link="([commit]($REPO_HTTP_URL/commit/$commit_hash))"
+  additional_info=$(_get_commit_info_by_hash "$commit_hash" "$additional_info_format")
+  printf "\n* %s\n%s\n%s" "$commit_title" "$commit_link" "$additional_info"
+}
+
+function _generate_commit_groups() {
+  while read -r commit_hash; do
+    commit_title=$(_get_commit_info_by_hash "$commit_hash" '%s')
+    tag_index=$(_get_tag_index_by_commit_title "$commit_title")
+    if [ "$ARGUMENT_ALL_COMMITS" = 'true' ] || [[ "$tag_index" != '' ]]; then
+      if [ "$ARGUMENT_SHORT" = 'true' ]; then
+        additional_info_format=''
+      else
+        additional_info_format='(%cn)%n%n%b'
+      fi
+      log_message=$(_get_log_message "$commit_hash" "$commit_title" "$additional_info_format")
+      if [ "$ARGUMENT_SINGLE_LIST" = 'true' ]; then
+        NO_TAG_COMMITS="$NO_TAG_COMMITS$log_message"
+      else
+        if [ "$tag_index" = '' ]; then
+          NO_TAG_COMMITS="$NO_TAG_COMMITS$log_message"
+        else
+          RELEASE_NOTES_TAG_GROUPS[$tag_index]="${RELEASE_NOTES_TAG_GROUPS[$tag_index]}$log_message"
+        fi
+      fi
+    fi
+  done < <(echo "$ALL_COMMITS")
+}
+
+function _get_single_list_release() {
+  echo "$NO_TAG_COMMITS"
+}
+
+function _get_groupped_release() {
+  for i in "${!RELEASE_NOTES_TAG_GROUPS[@]}"; do
+    if [[ "${RELEASE_NOTES_TAG_GROUPS[$i]}" != '' ]]; then
+      printf "\n"
+      echo "--- ${CONVENTIONAL_COMMIT_TAGS[$i]} ---"
+      echo "${RELEASE_NOTES_TAG_GROUPS[$i]}"
+    fi
+  done
+  if [[ "$NO_TAG_COMMITS" != '' ]]; then
+    printf "\n"
+    echo "--- untagged ---"
+    echo "$NO_TAG_COMMITS"
+  fi
+}
+
+function _get_release_notes() {
+  echo "$RELEASE_HEADER"
+  if [ "$ARGUMENT_SINGLE_LIST" = 'true' ]; then
+    _get_single_list_release
+  else
+    _get_groupped_release
+  fi
 }
 
 function get_raw_logs() {
@@ -128,18 +198,10 @@ function get_raw_logs() {
   git log "$SPECIFIED_INTERVAL" --oneline --pretty=format:%s
 }
 
-function get_short_release_notes() {
-  _show_function_title "short release notes:"
-  _get_commit_tags
-  echo "$ALL_COMMITS" | while read -r line; do
-    commit_title=$(_get_commit_info_by_name "$line" '"%s"')
-    commit_link="[commit]($REPO_HTTP_URL/commit/$line)"
-    printf "\n%s\n" "$commit_title $commit_link"
-  done
-}
-
 function get_default_release_notes() {
-  get_short_release_notes
+  _collect_all_commits || exit 1
+  _generate_commit_groups || exit 1
+  _get_release_notes || exit 1
 }
 
 function show_generator_version() {
@@ -172,6 +234,12 @@ while [[ $# -gt 0 ]]; do
   -s|--short)
     ARGUMENT_SHORT='true'
     shift ;;
+  --single-list)
+    ARGUMENT_SINGLE_LIST='true'
+    shift ;;
+  -a|--all-commits)
+    ARGUMENT_ALL_COMMITS='true'
+    shift ;;
   -*|--*)
     _show_invalid_usage_error_message "Unknown option '$1'!"
     exit 1 ;;
@@ -195,8 +263,6 @@ case "$COMMAND" in
 gen-release-notes)
   if [ "$ARGUMENT_RAW" = 'true' ]; then
     get_raw_logs
-  elif [ "$ARGUMENT_SHORT" = 'true' ]; then
-    get_short_release_notes
   else
     get_default_release_notes
   fi
