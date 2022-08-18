@@ -11,7 +11,7 @@
 #/     Commit pointer can be:
 #/        - commit hash
 #/        - commit tag
-#/        - 'HEAD'
+#/        - 'HEAD' for latest commit
 #/     Interval examples:
 #/        - bc483c1..HEAD (equals to bc483c1..)
 #/        - v1.0.1..v1.1.0
@@ -27,6 +27,16 @@
 #/
 #/     Mutually exclusive parameters: short, raw-logs
 #/
+#/ Custom configuration for projects
+#/     If you want to use custom tag group headers or custom release header you can specify them in .gen_release_notes.
+#/     Your .gen_release_notes file should be placed in root folder of your repository.
+#/
+#/     To specify group headers put it in variable named "<CORRESPONDING_TAG>_GROUP_HEADER" (f.e. if you want to specify
+#/     'feat' tag header as "Features" you should write "FEAT_GROUP_HEADER='Features'" line to your .gen_release_notes).
+#/     To specify release header text add "RELEASE_HEADER='<your static header>'" line to your .gen_release_notes.
+#/
+#/     Your can find examples in https://github.com/Greewil/release-notes-generator/tree/main/project_configuration_examples
+#/
 #/ Generate release notes for your project.
 #/ Script can generate release notes for your project from any directory inside of your local repository.
 #/ Project repository: https://github.com/Greewil/release-notes-generator
@@ -40,6 +50,7 @@ RELEASE_NOTES_GENERATOR_VERSION='0.1.0'
 CONVENTIONAL_COMMIT_TAGS=('build' 'ci' 'chore' 'docs' 'feat' 'fix' 'pref' 'refactor' 'revert' 'style' 'test')
 
 # generator global variables (Please don't modify!)
+ROOT_REPO_DIR=''
 REPO_HTTP_URL=''
 ALL_COMMITS=''
 RELEASE_NOTES_TAG_GROUPS=() # for each CONVENTIONAL_COMMIT_TAGS
@@ -108,13 +119,21 @@ function _show_invalid_usage_error_message() {
 function _exit_if_using_multiple_commands() {
   last_command=$1
   if [ "$COMMAND" != '' ]; then
-    _show_invalid_usage_error_message "You can't use both commands: '$COMMAND' and '$1'!"
+    _show_invalid_usage_error_message "You can't use both commands: '$COMMAND' and '$last_command'!"
     exit 1
   fi
 }
 
 function _get_initial_commit_reference() {
   git rev-list --max-parents=0 HEAD
+}
+
+function _get_root_repo_dir() {
+  ROOT_REPO_DIR=$(git rev-parse --show-toplevel) || {
+    _show_error_message "Can't find root repo directory!"
+    echo
+    return 1
+  }
 }
 
 function _get_repo_url() {
@@ -186,7 +205,7 @@ function _get_single_list_release() {
 function _get_group_header() {
   tag_name=$1
   header_variable_name="$(echo "$tag_name" | tr '[:lower:]' '[:upper:]')_GROUP_HEADER"
-  echo ${!header_variable_name}
+  echo "${!header_variable_name}"
 }
 
 function _get_groupped_release() {
@@ -261,7 +280,7 @@ while [[ $# -gt 0 ]]; do
   -a|--all-commits)
     ARGUMENT_ALL_COMMITS='true'
     shift ;;
-  -*|--*)
+  -*)
     _show_invalid_usage_error_message "Unknown option '$1'!"
     exit 1 ;;
   *)
@@ -270,7 +289,9 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-_get_repo_url
+_get_repo_url || exit 1
+_get_root_repo_dir || exit 1
+[ -f "$ROOT_REPO_DIR/.gen_release_notes" ] && (source "$ROOT_REPO_DIR/.gen_release_notes" || exit 1)
 
 case "$COMMAND" in
 --help)
