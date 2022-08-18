@@ -1,0 +1,15 @@
+# header:
+RELEASE_HEADER=''
+
+# group headers:
+BUILD_GROUP_HEADER='Changes that affect the build system or external dependencies'
+CI_GROUP_HEADER='Changes to CI configuration files and scripts'
+CHORE_GROUP_HEADER='Changes that do not modify src or test files'
+DOCS_GROUP_HEADER='Documentation changes'
+FEAT_GROUP_HEADER='New features'
+FIX_GROUP_HEADER='Bug fixes'
+PREF_GROUP_HEADER='Changes that improves performance'
+REFACTOR_GROUP_HEADER='Code changes that neither fix bugs nor add a features'
+REVERT_GROUP_HEADER='Changes that revert previous commits'
+STYLE_GROUP_HEADER='Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)'
+TEST_GROUP_HEADER='Adding missing tests or correcting existing tests'

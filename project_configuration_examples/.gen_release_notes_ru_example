@@ -1,0 +1,15 @@
+# header:
+RELEASE_HEADER=''
+
+# group headers:
+BUILD_GROUP_HEADER='Сборка проекта или изменения внешних зависимостей'
+CI_GROUP_HEADER='Настройка CI и работа со скриптами'
+CHORE_GROUP_HEADER='Правки не влияющие на исходники или тестовые файлы'
+DOCS_GROUP_HEADER='Обновление документации'
+FEAT_GROUP_HEADER='Добавление нового функционала'
+FIX_GROUP_HEADER='Исправление ошибок'
+PREF_GROUP_HEADER='Улучшение производительности'
+REFACTOR_GROUP_HEADER='Рефакторинг'
+REVERT_GROUP_HEADER='Откат на предыдущие коммиты'
+STYLE_GROUP_HEADER='Форматирование кода'
+TEST_GROUP_HEADER='Правки тестов'
