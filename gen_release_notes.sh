@@ -42,9 +42,23 @@ CONVENTIONAL_COMMIT_TAGS=('build' 'ci' 'chore' 'docs' 'feat' 'fix' 'pref' 'refac
 # generator global variables (Please don't modify!)
 REPO_HTTP_URL=''
 ALL_COMMITS=''
-RELEASE_NOTES_TAG_GROUPS=('' '' '' '' '' '' '' '' '' '' '') # for each CONVENTIONAL_COMMIT_TAGS
-NO_TAG_COMMITS=''                                           # for commits without tags
-RELEASE_NOTES=''
+RELEASE_NOTES_TAG_GROUPS=() # for each CONVENTIONAL_COMMIT_TAGS
+for i in $(seq 1 ${#CONVENTIONAL_COMMIT_TAGS[@]}); do RELEASE_NOTES_TAG_GROUPS+=(''); done
+NO_TAG_COMMITS=''           # for commits without tags
+
+# default configuration:
+RELEASE_HEADER=''
+BUILD_GROUP_HEADER='Build system and external dependencies'
+CI_GROUP_HEADER='CI configuration files and scripts'
+CHORE_GROUP_HEADER='Chores'
+DOCS_GROUP_HEADER='Documentation'
+FEAT_GROUP_HEADER='Features'
+FIX_GROUP_HEADER='Bug fixes'
+PREF_GROUP_HEADER='Performance improvements'
+REFACTOR_GROUP_HEADER='Refactoring'
+REVERT_GROUP_HEADER='Reverts'
+STYLE_GROUP_HEADER='Formatting'
+TEST_GROUP_HEADER='Tests'
 
 # Output colors
 APP_NAME='gen-release-notes'
@@ -104,14 +118,14 @@ function _get_initial_commit_reference() {
 }
 
 function _get_repo_url() {
-  url=$(git remote get-url origin)
-  if [[ "$url" = 'git@'* ]]; then
-    url="${url/git@/}"
+  origin_url=$(git remote get-url origin)
+  if [[ "$origin_url" = 'git@'* ]]; then
+    url="${origin_url/git@/}"
     url="${url/:/\/}"
     url="https://${url/.git/}"
     REPO_HTTP_URL="$url"
   else
-    REPO_HTTP_URL="$url"
+    REPO_HTTP_URL="$origin_url"
   fi
 }
 
@@ -169,11 +183,18 @@ function _get_single_list_release() {
   echo "$NO_TAG_COMMITS"
 }
 
+function _get_group_header() {
+  tag_name=$1
+  header_variable_name="$(echo "$tag_name" | tr '[:lower:]' '[:upper:]')_GROUP_HEADER"
+  echo ${!header_variable_name}
+}
+
 function _get_groupped_release() {
   for i in "${!RELEASE_NOTES_TAG_GROUPS[@]}"; do
     if [[ "${RELEASE_NOTES_TAG_GROUPS[$i]}" != '' ]]; then
       printf "\n"
-      echo "--- ${CONVENTIONAL_COMMIT_TAGS[$i]} ---"
+      group_header=$(_get_group_header "${CONVENTIONAL_COMMIT_TAGS[$i]}")
+      echo "## $group_header"
       echo "${RELEASE_NOTES_TAG_GROUPS[$i]}"
     fi
   done
