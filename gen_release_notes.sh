@@ -148,15 +148,17 @@ function _get_repo_url() {
   fi
 }
 
-function _get_tag_index_by_commit_title() {
-  title=$1
+function _get_tag_index_by_name() {
+  tag_name=$1
   for i in "${!CONVENTIONAL_COMMIT_TAGS[@]}"; do
-    [[ "$title" = "${CONVENTIONAL_COMMIT_TAGS[$i]}"* ]] && echo "$i"
+    if [ "$tag_name" = "${CONVENTIONAL_COMMIT_TAGS[$i]}" ]; then
+      echo "$i"
+    fi
   done
 }
 
 function _collect_all_commits() {
-  ALL_COMMITS=$(git log "$SPECIFIED_INTERVAL" --oneline --pretty=format:%H) || return 1
+  ALL_COMMITS="$(git log "$SPECIFIED_INTERVAL" --oneline --pretty=format:%H)"
 }
 
 function _get_commit_info_by_hash() {
@@ -177,14 +179,20 @@ function _get_log_message() {
 function _generate_commit_groups() {
   while read -r commit_hash; do
     commit_title=$(_get_commit_info_by_hash "$commit_hash" '%s')
-    tag_index=$(_get_tag_index_by_commit_title "$commit_title")
+    if [[ "$commit_title" =~ ^(build|ci|chore|docs|feat|fix|pref|refactor|revert|style|test)(\([a-z]+\))?!?:\ (.*) ]]; then
+      tag_index=$(_get_tag_index_by_name "${BASH_REMATCH[1]}")
+      title_description_only="${BASH_REMATCH[3]}"
+    else
+      tag_index=''
+      title_description_only="$commit_title"
+    fi
     if [ "$ARGUMENT_ALL_COMMITS" = 'true' ] || [[ "$tag_index" != '' ]]; then
       if [ "$ARGUMENT_SHORT" = 'true' ]; then
         additional_info_format=''
       else
         additional_info_format='(%cn)%n%n%b'
       fi
-      log_message=$(_get_log_message "$commit_hash" "$commit_title" "$additional_info_format")
+      log_message=$(_get_log_message "$commit_hash" "$title_description_only" "$additional_info_format")
       if [ "$ARGUMENT_SINGLE_LIST" = 'true' ]; then
         NO_TAG_COMMITS="$NO_TAG_COMMITS$log_message"
       else
@@ -208,7 +216,7 @@ function _get_group_header() {
   echo "${!header_variable_name}"
 }
 
-function _get_groupped_release() {
+function _get_grouped_release() {
   for i in "${!RELEASE_NOTES_TAG_GROUPS[@]}"; do
     if [[ "${RELEASE_NOTES_TAG_GROUPS[$i]}" != '' ]]; then
       printf "\n"
@@ -219,17 +227,17 @@ function _get_groupped_release() {
   done
   if [[ "$NO_TAG_COMMITS" != '' ]]; then
     printf "\n"
-    echo "--- untagged ---"
+    echo "## Untagged commits"
     echo "$NO_TAG_COMMITS"
   fi
 }
 
-function _get_release_notes() {
+function _get_release_notes_text() {
   echo "$RELEASE_HEADER"
   if [ "$ARGUMENT_SINGLE_LIST" = 'true' ]; then
     _get_single_list_release
   else
-    _get_groupped_release
+    _get_grouped_release
   fi
 }
 
@@ -238,10 +246,10 @@ function get_raw_logs() {
   git log "$SPECIFIED_INTERVAL" --oneline --pretty=format:%s
 }
 
-function get_default_release_notes() {
+function get_release_notes() {
   _collect_all_commits || exit 1
   _generate_commit_groups || exit 1
-  _get_release_notes || exit 1
+  _get_release_notes_text || exit 1
 }
 
 function show_generator_version() {
@@ -306,7 +314,7 @@ gen-release-notes)
   if [ "$ARGUMENT_RAW" = 'true' ]; then
     get_raw_logs
   else
-    get_default_release_notes
+    get_release_notes
   fi
   exit 0
   ;;
