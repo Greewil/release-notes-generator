@@ -23,16 +23,16 @@
 #/     -a, --all-commits        release notes will be generated from all commits which are inside of specified interval
 #/                              (by default release notes will be generated only from conventional commits)
 #/     --single-list            release notes will be generated as single list of commit messages
-#/                              (by default log messages will be grouped by conventional commit tags)
+#/                              (by default log messages will be grouped by conventional commit types)
 #/
 #/     Mutually exclusive parameters: (-s | --short), (-r | --raw-logs)
 #/
 #/ Custom configuration for projects
-#/     If you want to use custom tag group headers or custom release header you can specify them in .gen_release_notes.
+#/     If you want to use custom group headers or custom release header you can specify them in .gen_release_notes.
 #/     Your .gen_release_notes file should be placed in root folder of your repository.
 #/
-#/     To specify group headers put it in variable named "<CORRESPONDING_TAG>_GROUP_HEADER" (f.e. if you want to specify
-#/     'feat' tag header as "Features" you should write "FEAT_GROUP_HEADER='Features'" line to your .gen_release_notes).
+#/     To specify group headers put it in variable named "<CORRESPONDING_TYPE>_GROUP_HEADER" (f.e. if you want to specify
+#/     'feat' type header as "Features" you should write "FEAT_GROUP_HEADER='Features'" line to your .gen_release_notes).
 #/     To specify release header text add "RELEASE_HEADER='<your static header>'" line to your .gen_release_notes.
 #/
 #/     Your can find examples in https://github.com/Greewil/release-notes-generator/tree/main/project_configuration_examples
@@ -44,18 +44,18 @@
 # Written by Shishkin Sergey <shishkin.sergey.d@gmail.com>
 
 # Current generator version
-RELEASE_NOTES_GENERATOR_VERSION='0.1.0'
+RELEASE_NOTES_GENERATOR_VERSION='0.2.0'
 
-# all conventional commit tags (Please don't modify!)
-CONVENTIONAL_COMMIT_TAGS=('build' 'ci' 'chore' 'docs' 'feat' 'fix' 'pref' 'refactor' 'revert' 'style' 'test')
+# all conventional commit types (Please don't modify!)
+CONVENTIONAL_COMMIT_TYPES=('build' 'ci' 'chore' 'docs' 'feat' 'fix' 'pref' 'refactor' 'revert' 'style' 'test')
 
 # generator global variables (Please don't modify!)
 ROOT_REPO_DIR=''
 REPO_HTTP_URL=''
 ALL_COMMITS=''
-RELEASE_NOTES_TAG_GROUPS=() # for each CONVENTIONAL_COMMIT_TAGS
-for i in $(seq 1 ${#CONVENTIONAL_COMMIT_TAGS[@]}); do RELEASE_NOTES_TAG_GROUPS+=(''); done
-NO_TAG_COMMITS=''           # for commits without tags
+RELEASE_NOTES_TYPE_GROUPS=() # for each CONVENTIONAL_COMMIT_TYPES
+for i in $(seq 1 ${#CONVENTIONAL_COMMIT_TYPES[@]}); do RELEASE_NOTES_TYPE_GROUPS+=(''); done
+UNTYPED_COMMITS=''           # for commits without types
 
 # default configuration:
 RELEASE_HEADER=''
@@ -148,10 +148,10 @@ function _get_repo_url() {
   fi
 }
 
-function _get_tag_index_by_name() {
-  tag_name=$1
-  for i in "${!CONVENTIONAL_COMMIT_TAGS[@]}"; do
-    if [ "$tag_name" = "${CONVENTIONAL_COMMIT_TAGS[$i]}" ]; then
+function _get_type_index_by_name() {
+  type_name=$1
+  for i in "${!CONVENTIONAL_COMMIT_TYPES[@]}"; do
+    if [ "$type_name" = "${CONVENTIONAL_COMMIT_TYPES[$i]}" ]; then
       echo "$i"
     fi
   done
@@ -188,13 +188,13 @@ function _generate_commit_groups() {
   while read -r commit_hash; do
     commit_title=$(_get_commit_info_by_hash "$commit_hash" '%s')
     if [[ "$commit_title" =~ ^(build|ci|chore|docs|feat|fix|pref|refactor|revert|style|test)(\([a-z]+\))?!?:\ (.*) ]]; then
-      tag_index=$(_get_tag_index_by_name "${BASH_REMATCH[1]}")
+      type_index=$(_get_type_index_by_name "${BASH_REMATCH[1]}")
       title_description_only="${BASH_REMATCH[3]}"
     else
-      tag_index=''
+      type_index=''
       title_description_only="$commit_title"
     fi
-    if [ "$ARGUMENT_ALL_COMMITS" = 'true' ] || [[ "$tag_index" != '' ]]; then
+    if [ "$ARGUMENT_ALL_COMMITS" = 'true' ] || [[ "$type_index" != '' ]]; then
       if [ "$ARGUMENT_SHORT" = 'true' ]; then
         additional_info_format=''
       else
@@ -202,12 +202,12 @@ function _generate_commit_groups() {
       fi
       log_message=$(_get_log_message "$commit_hash" "$title_description_only" "$additional_info_format")
       if [ "$ARGUMENT_SINGLE_LIST" = 'true' ]; then
-        NO_TAG_COMMITS="$NO_TAG_COMMITS$log_message"
+        UNTYPED_COMMITS="$UNTYPED_COMMITS$log_message"
       else
-        if [ "$tag_index" = '' ]; then
-          NO_TAG_COMMITS="$NO_TAG_COMMITS$log_message"
+        if [ "$type_index" = '' ]; then
+          UNTYPED_COMMITS="$UNTYPED_COMMITS$log_message"
         else
-          RELEASE_NOTES_TAG_GROUPS[$tag_index]="${RELEASE_NOTES_TAG_GROUPS[$tag_index]}$log_message"
+          RELEASE_NOTES_TYPE_GROUPS[$type_index]="${RELEASE_NOTES_TYPE_GROUPS[$type_index]}$log_message"
         fi
       fi
     fi
@@ -215,28 +215,28 @@ function _generate_commit_groups() {
 }
 
 function _get_single_list_release() {
-  echo "$NO_TAG_COMMITS"
+  echo "$UNTYPED_COMMITS"
 }
 
 function _get_group_header() {
-  tag_name=$1
-  header_variable_name="$(echo "$tag_name" | tr '[:lower:]' '[:upper:]')_GROUP_HEADER"
+  type_name=$1
+  header_variable_name="$(echo "$type_name" | tr '[:lower:]' '[:upper:]')_GROUP_HEADER"
   echo "${!header_variable_name}"
 }
 
 function _get_grouped_release() {
-  for i in "${!RELEASE_NOTES_TAG_GROUPS[@]}"; do
-    if [[ "${RELEASE_NOTES_TAG_GROUPS[$i]}" != '' ]]; then
+  for i in "${!RELEASE_NOTES_TYPE_GROUPS[@]}"; do
+    if [[ "${RELEASE_NOTES_TYPE_GROUPS[$i]}" != '' ]]; then
       printf "\n"
-      group_header=$(_get_group_header "${CONVENTIONAL_COMMIT_TAGS[$i]}")
+      group_header=$(_get_group_header "${CONVENTIONAL_COMMIT_TYPES[$i]}")
       echo "## $group_header"
-      echo "${RELEASE_NOTES_TAG_GROUPS[$i]}"
+      echo "${RELEASE_NOTES_TYPE_GROUPS[$i]}"
     fi
   done
-  if [[ "$NO_TAG_COMMITS" != '' ]]; then
+  if [[ "$UNTYPED_COMMITS" != '' ]]; then
     printf "\n"
-    echo "## Untagged commits"
-    echo "$NO_TAG_COMMITS"
+    echo "## Untyped commits"
+    echo "$UNTYPED_COMMITS"
   fi
 }
 

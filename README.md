@@ -14,7 +14,7 @@ Release notes generator (gen-release-notes) is a tool for easy and customizable 
 By default, generator can work without any configs.
 
 It can work as with [conventional commits][conventional_commits] so with general commits depending on input parameters, 
-but it's recommended to use conventional commits to separate your commits by tag groups.
+but it's recommended to use conventional commits to separate your commits by types.
 
 Release notes generator takes all commits between two points in history and makes full log of changes. 
 Generated changelog could be sorted by conventional commit types if there are so.
@@ -79,16 +79,16 @@ To generate your own one line installer just follow the instructions after start
         -a, --all-commits        release notes will be generated from all commits which are inside of specified interval
                                  (by default release notes will be generated only from conventional commits)
         --single-list            release notes will be generated as single list of commit messages
-                                 (by default log messages will be grouped by conventional commit tags)
+                                 (by default log messages will be grouped by conventional commit types)
     
         Mutually exclusive parameters: (-s | --short), (-r | --raw-logs)
     
     Custom configuration for projects
-        If you want to use custom tag group headers or custom release header you can specify them in .gen_release_notes.
+        If you want to use custom group headers or custom release header you can specify them in .gen_release_notes.
         Your .gen_release_notes file should be placed in root folder of your repository.
     
-        To specify group headers put it in variable named "<CORRESPONDING_TAG>_GROUP_HEADER" (f.e. if you want to specify
-        'feat' tag header as "Features" you should write "FEAT_GROUP_HEADER='Features'" line to your .gen_release_notes).
+        To specify group headers put it in variable named "<CORRESPONDING_TYPE>_GROUP_HEADER" (f.e. if you want to specify
+        'feat' type header as "Features" you should write "FEAT_GROUP_HEADER='Features'" line to your .gen_release_notes).
         To specify release header text add "RELEASE_HEADER='<your static header>'" line to your .gen_release_notes.
     
         Your can find examples in https://github.com/Greewil/release-notes-generator/tree/main/project_configuration_examples
