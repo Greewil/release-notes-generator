@@ -17,9 +17,9 @@
 #/        - v1.0.1..v1.1.0
 #/
 #/ Options:
-#/     -r, --raw-logs           show only list of commit titles
+#/     -r, --raw                show only list of commit titles
 #/     -s, --short              show only titles of commits without message body
-#/     -f <file_name>           save output to file
+#     -f <file_name>           save output to file
 #/     -a, --all-commits        release notes will be generated from all commits which are inside of specified interval
 #/                              (by default release notes will be generated only from conventional commits)
 #/     --single-list            release notes will be generated as single list of commit messages
@@ -279,7 +279,7 @@ while [[ $# -gt 0 ]]; do
     COMMAND='gen-release-notes'
     SPECIFIED_INTERVAL="$1"
     shift ;;
-  -r|--raw-logs)
+  -r|--raw)
     ARGUMENT_RAW='true'
     shift ;;
   -s|--short)
