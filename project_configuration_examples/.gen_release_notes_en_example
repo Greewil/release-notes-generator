@@ -1,0 +1,15 @@
+# header:
+RELEASE_HEADER=''
+
+# group headers:
+BUILD_GROUP_HEADER='Build system and external dependencies'
+CI_GROUP_HEADER='CI configuration files and scripts'
+CHORE_GROUP_HEADER='Chores'
+DOCS_GROUP_HEADER='Documentation'
+FEAT_GROUP_HEADER='Features'
+FIX_GROUP_HEADER='Bug fixes'
+PREF_GROUP_HEADER='Performance improvements'
+REFACTOR_GROUP_HEADER='Refactoring'
+REVERT_GROUP_HEADER='Reverts'
+STYLE_GROUP_HEADER='Formatting'
+TEST_GROUP_HEADER='Tests'
