@@ -173,7 +173,12 @@ function _get_log_message() {
   additional_info_format=$3
   commit_link="([commit]($REPO_HTTP_URL/commit/$commit_hash))"
   additional_info=$(_get_commit_info_by_hash "$commit_hash" "$additional_info_format")
-  printf "\n* %s\n%s\n%s" "$commit_title" "$commit_link" "$additional_info"
+
+  if [ "$ARGUMENT_RAW" = 'true' ]; then
+    printf "\n* %s" "$commit_title"
+  else
+    printf "\n* %s\n%s\n%s" "$commit_title" "$commit_link" "$additional_info"
+  fi
 }
 
 function _generate_commit_groups() {
@@ -241,11 +246,6 @@ function _get_release_notes_text() {
   fi
 }
 
-function get_raw_logs() {
-  _show_function_title "raw release notes:"
-  git log "$SPECIFIED_INTERVAL" --oneline --pretty=format:%s
-}
-
 function get_release_notes() {
   _collect_all_commits || exit 1
   _generate_commit_groups || exit 1
@@ -311,11 +311,7 @@ case "$COMMAND" in
   exit 0
   ;;
 gen-release-notes)
-  if [ "$ARGUMENT_RAW" = 'true' ]; then
-    get_raw_logs
-  else
-    get_release_notes
-  fi
+  get_release_notes
   exit 0
   ;;
 esac
