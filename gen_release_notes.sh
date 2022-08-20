@@ -25,7 +25,7 @@
 #/     --single-list            release notes will be generated as single list of commit messages
 #/                              (by default log messages will be grouped by conventional commit tags)
 #/
-#/     Mutually exclusive parameters: short, raw-logs
+#/     Mutually exclusive parameters: (-s | --short), (-r | --raw-logs)
 #/
 #/ Custom configuration for projects
 #/     If you want to use custom tag group headers or custom release header you can specify them in .gen_release_notes.
@@ -172,12 +172,15 @@ function _get_log_message() {
   commit_title=$2
   additional_info_format=$3
   commit_link="([commit]($REPO_HTTP_URL/commit/$commit_hash))"
-  additional_info=$(_get_commit_info_by_hash "$commit_hash" "$additional_info_format")
-
+  additional_info=''
+  while read -r line; do
+    additional_info="$additional_info"$'\n   '"$line"
+  done < <(_get_commit_info_by_hash "$commit_hash" "$additional_info_format")
   if [ "$ARGUMENT_RAW" = 'true' ]; then
     printf "\n* %s" "$commit_title"
   else
-    printf "\n* %s\n%s\n%s" "$commit_title" "$commit_link" "$additional_info"
+    printf "\n* %s\n   %s" "$commit_title" "$commit_link"
+    echo "$additional_info"
   fi
 }
 
