@@ -124,10 +124,6 @@ function _exit_if_using_multiple_commands() {
   fi
 }
 
-function _get_initial_commit_reference() {
-  git rev-list --max-parents=0 HEAD
-}
-
 function _get_root_repo_dir() {
   ROOT_REPO_DIR=$(git rev-parse --show-toplevel) || {
     _show_error_message "Can't find root repo directory!"
@@ -146,6 +142,10 @@ function _get_repo_url() {
   else
     REPO_HTTP_URL="$origin_url"
   fi
+}
+
+function _get_initial_commit_reference() {
+  git rev-list --max-parents=0 HEAD
 }
 
 function _get_type_index_by_name() {
@@ -273,6 +273,12 @@ while [[ $# -gt 0 ]]; do
   -v|--version)
     _exit_if_using_multiple_commands "$1"
     COMMAND='--version'
+    shift ;;
+  ..*)
+    _exit_if_using_multiple_commands "$1"
+    COMMAND='gen-release-notes'
+    begin_ref=$(_get_initial_commit_reference)
+    SPECIFIED_INTERVAL="$begin_ref$1"
     shift ;;
   *..*)
     _exit_if_using_multiple_commands "$1"
