@@ -24,6 +24,8 @@
 #/                              (by default release notes will be generated only from conventional commits)
 #/     --single-list            release notes will be generated as single list of commit messages
 #/                              (by default log messages will be grouped by conventional commit types)
+#/     -lt, --from-latest-tag   replace beginning of the interval with latest tag in repository
+#/                              (so interval will be 'LATEST_TAG..<your_second_tag>')
 #/
 #/     Mutually exclusive parameters: (-s | --short), (-r | --raw-logs)
 #/
@@ -88,6 +90,7 @@ ARGUMENT_RAW='false'
 ARGUMENT_SAVE_OUTPUT='false'
 ARGUMENT_ALL_COMMITS='false'
 ARGUMENT_SINGLE_LIST='false'
+ARGUMENT_FROM_LATEST_TAG='false'
 
 
 function _show_function_title() {
@@ -148,6 +151,10 @@ function _get_initial_commit_reference() {
   git rev-list --max-parents=0 HEAD
 }
 
+function _get_latest_tag() {
+  git describe --tags --abbrev=0
+}
+
 function _get_type_index_by_name() {
   type_name=$1
   for i in "${!CONVENTIONAL_COMMIT_TYPES[@]}"; do
@@ -158,6 +165,10 @@ function _get_type_index_by_name() {
 }
 
 function _collect_all_commits() {
+  if [ "$ARGUMENT_FROM_LATEST_TAG" = 'true' ]; then
+    first_pointer=$(_get_latest_tag)
+    SPECIFIED_INTERVAL="$first_pointer..${SPECIFIED_INTERVAL#*..}"
+  fi
   ALL_COMMITS="$(git log "$SPECIFIED_INTERVAL" --oneline --pretty=format:%H)"
 }
 
@@ -296,6 +307,9 @@ while [[ $# -gt 0 ]]; do
     shift ;;
   -a|--all-commits)
     ARGUMENT_ALL_COMMITS='true'
+    shift ;;
+  -lt|--from-latest-tag)
+    ARGUMENT_FROM_LATEST_TAG='true'
     shift ;;
   -*)
     _show_invalid_usage_error_message "Unknown option '$1'!"

@@ -80,6 +80,8 @@ To generate your own one line installer just follow the instructions after start
                                  (by default release notes will be generated only from conventional commits)
         --single-list            release notes will be generated as single list of commit messages
                                  (by default log messages will be grouped by conventional commit types)
+        -lt, --from-latest-tag   replace beginning of the interval with latest tag in repository
+                                 (so interval will be 'LATEST_TAG..<your_second_tag>')
     
         Mutually exclusive parameters: (-s | --short), (-r | --raw-logs)
     
