@@ -17,6 +17,7 @@ DEFAULT_INSTALLATION='false'
 
 # Installer's global variables (Please don't modify!)
 INSTALLATION_DIR=''
+COMPLETION_DIR=''
 
 
 function _show_function_title() {
@@ -101,6 +102,10 @@ function _get_script_source_path() {
   echo "$output"
 }
 
+function _warning_should_restart() {
+  _show_warning_message 'Autocompletion will be available only after restarting your shell session!'
+}
+
 function _check_installed_version() {
   # get installer path in case if installer started not from the same directory
   installer_path=$(_get_script_source_path)
@@ -131,8 +136,15 @@ function _install() {
   mkdir -p "$INSTALLATION_DIR" || return 1
   cp -f "$installer_path/$APP_TO_INSTALL" "$INSTALLATION_DIR/$INSTALLING_APP_NAME" || return 1
 
+  # install autocompletion script
+  mkdir -p "$COMPLETION_DIR" || return 1
+  cp -f "$installer_path/gen-release-notes-completion.sh" "$COMPLETION_DIR/$COMPLETION_SCRIPT_NAME" || return 1
+
   # check is generator installed properly
   _check_installed_version || return 1
+
+  # warning to restart completion script
+  _warning_should_restart || return 1
 }
 
 function _is_dir_exists() {
@@ -163,6 +175,19 @@ function _manual_select_installation_dir() {
   echo "installation directory selected: $INSTALLATION_DIR"
 }
 
+function _manual_select_completion_dir() {
+  _show_function_title "select directory for autocompletion script"
+  ask_input_message="Enter directory path where you want to install autocompletion script for $INSTALLING_APP_NAME"
+  output_variable_name="COMPLETION_DIR"
+  check_function="_is_dir_exists"
+  check_failed_message="Directory doesn't exist! Please select another directory or create this one!"
+  _get_input_with_check "$ask_input_message" "$output_variable_name" "$check_function" "$check_failed_message"
+  echo "directory for autocompletion script selected: $COMPLETION_DIR"
+  ask_input_message="Enter name of the completion script (recommended: $INSTALLING_APP_NAME)"
+  output_variable_name="COMPLETION_SCRIPT_NAME"
+  _get_input "$ask_input_message" "$output_variable_name"
+}
+
 function _manual_installation() {
   [ $DEFAULT_INSTALLATION = 'true' ] && {
     _show_error_message "Default installation failed!"
@@ -170,6 +195,7 @@ function _manual_installation() {
   }
   _show_function_title "manual installation"
   _manual_select_installation_dir || return 1
+  _manual_select_completion_dir || exit 1
   _install || return 1
 }
 
@@ -177,6 +203,8 @@ function _install_msys() {
   if [ -n "$HOME" ]; then
     _show_function_title "Installing for msys ..."
     INSTALLATION_DIR="$HOME/bin"
+    COMPLETION_DIR="$HOME/bash_completion.d"
+    COMPLETION_SCRIPT_NAME="$INSTALLING_APP_NAME-completion.bash"
     _install || {
       _show_error_message "Something went wrong due installation!"
       exit 1
@@ -190,6 +218,14 @@ function _install_msys() {
 function _install_unix_like() {
   _show_function_title "Installing for unix-like OS ($OSTYPE) ..."
   INSTALLATION_DIR="/usr/bin"
+  if [ -d /usr/share/bash-completion/completions ]; then
+    COMPLETION_DIR="/usr/share/bash-completion/completions"
+    COMPLETION_SCRIPT_NAME="$INSTALLING_APP_NAME"
+  else
+    _show_error_message "Couldn't find bash-completion directory!"
+    echo "Please select bash-completion directory manually"
+    _manual_select_completion_dir || exit 1
+  fi
   _install || {
     _show_error_message "Something went wrong due installation!"
     exit 1
