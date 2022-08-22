@@ -17,15 +17,21 @@
 #/        - v1.0.1..v1.1.0
 #/
 #/ Options:
-#/     -r, --raw                show only list of commit titles
-#/     -s, --short              show only titles of commits without message body
-#     -f <file_name>           save output to file
-#/     -a, --all-commits        release notes will be generated from all commits which are inside of specified interval
+#/     -r, --raw-titles         Show only commit titles in log message headers
+#     -f <file_name>           Save output to file
+#/     -a, --all-commits        Release notes will be generated from all commits which are inside of specified interval
 #/                              (by default release notes will be generated only from conventional commits)
-#/     --single-list            release notes will be generated as single list of commit messages
+#/     --single-list            Release notes will be generated as single list of commit messages
 #/                              (by default log messages will be grouped by conventional commit types)
+#/     -lt, --from-latest-tag   Replace beginning of the interval with latest tag in repository
+#/                              (so interval will be 'LATEST_TAG..<your_second_tag>')
+#/     -s, --short              Don't show commit body in log messages
+#/                              Parameter won't work if you set your own format with '--format <your_format>'!
+#/     --format <your_format>   Set your own format for log message body.
+#/                              Format the same as for 'git --pretty=format:<your_format>'.
+#/                              (see more about git --pretty=format: here: https://git-scm.com/docs/pretty-formats)
 #/
-#/     Mutually exclusive parameters: (-s | --short), (-r | --raw-logs)
+#/     Mutually exclusive parameters: (-s | --short), (--format <your_format>)
 #/
 #/ Custom configuration for projects
 #/     If you want to use custom group headers or custom release header you can specify them in .gen_release_notes.
@@ -83,11 +89,14 @@ LIGHT_CYAN='\e[1;36m' # for changes
 COMMAND=''
 SPECIFIED_INTERVAL=''
 SPECIFIED_OUTPUT_FILE=''
+SPECIFIED_OUTPUT_FORMAT=''
 ARGUMENT_SHORT='false'
 ARGUMENT_RAW='false'
 ARGUMENT_SAVE_OUTPUT='false'
+ARGUMENT_CUSTOM_OUTPUT_FORMAT='false'
 ARGUMENT_ALL_COMMITS='false'
 ARGUMENT_SINGLE_LIST='false'
+ARGUMENT_FROM_LATEST_TAG='false'
 
 
 function _show_function_title() {
@@ -124,10 +133,6 @@ function _exit_if_using_multiple_commands() {
   fi
 }
 
-function _get_initial_commit_reference() {
-  git rev-list --max-parents=0 HEAD
-}
-
 function _get_root_repo_dir() {
   ROOT_REPO_DIR=$(git rev-parse --show-toplevel) || {
     _show_error_message "Can't find root repo directory!"
@@ -148,6 +153,14 @@ function _get_repo_url() {
   fi
 }
 
+function _get_initial_commit_reference() {
+  git rev-list --max-parents=0 HEAD
+}
+
+function _get_latest_tag() {
+  git describe --tags --abbrev=0
+}
+
 function _get_type_index_by_name() {
   type_name=$1
   for i in "${!CONVENTIONAL_COMMIT_TYPES[@]}"; do
@@ -158,30 +171,47 @@ function _get_type_index_by_name() {
 }
 
 function _collect_all_commits() {
+  if [ "$ARGUMENT_FROM_LATEST_TAG" = 'true' ]; then
+    first_pointer=$(_get_latest_tag)
+    SPECIFIED_INTERVAL="$first_pointer..${SPECIFIED_INTERVAL#*..}"
+  fi
   ALL_COMMITS="$(git log "$SPECIFIED_INTERVAL" --oneline --pretty=format:%H)"
 }
 
 function _get_commit_info_by_hash() {
   commit_hash=$1
   format=$2
+#  echo "$format"
   git log "$commit_hash" -n 1 --pretty=format:"$format"
+}
+
+function _get_log_message_header() {
+  commit_hash=$1
+  commit_title=$2
+  commit_link="([commit]($REPO_HTTP_URL/commit/$commit_hash))"
+  if [ "$ARGUMENT_RAW" = 'true' ]; then
+    printf "\n* %s" "$commit_title"
+  else
+    printf "\n* %s %s" "$commit_title" "$commit_link"
+  fi
+}
+
+function _get_log_message_additional_info() {
+  commit_hash=$1
+  additional_info_format=$2
+  additional_info=' '
+  while read -r line; do
+    additional_info="$additional_info$line"$'\n   '
+  done < <(_get_commit_info_by_hash "$commit_hash" "$additional_info_format")
+  echo "$additional_info"
 }
 
 function _get_log_message() {
   commit_hash=$1
   commit_title=$2
   additional_info_format=$3
-  commit_link="([commit]($REPO_HTTP_URL/commit/$commit_hash))"
-  additional_info=''
-  while read -r line; do
-    additional_info="$additional_info"$'\n   '"$line"
-  done < <(_get_commit_info_by_hash "$commit_hash" "$additional_info_format")
-  if [ "$ARGUMENT_RAW" = 'true' ]; then
-    printf "\n* %s" "$commit_title"
-  else
-    printf "\n* %s\n   %s" "$commit_title" "$commit_link"
-    echo "$additional_info"
-  fi
+  _get_log_message_header "$commit_hash" "$commit_title" || exit 1
+  _get_log_message_additional_info "$commit_hash" "$additional_info_format"
 }
 
 function _generate_commit_groups() {
@@ -195,7 +225,9 @@ function _generate_commit_groups() {
       title_description_only="$commit_title"
     fi
     if [ "$ARGUMENT_ALL_COMMITS" = 'true' ] || [[ "$type_index" != '' ]]; then
-      if [ "$ARGUMENT_SHORT" = 'true' ]; then
+      if [ "$ARGUMENT_CUSTOM_OUTPUT_FORMAT" = 'true' ]; then
+        additional_info_format="$SPECIFIED_OUTPUT_FORMAT%n"
+      elif [ "$ARGUMENT_SHORT" = 'true' ]; then
         additional_info_format=''
       else
         additional_info_format='(%cn)%n%n%b'
@@ -274,12 +306,18 @@ while [[ $# -gt 0 ]]; do
     _exit_if_using_multiple_commands "$1"
     COMMAND='--version'
     shift ;;
+  ..*)
+    _exit_if_using_multiple_commands "$1"
+    COMMAND='gen-release-notes'
+    begin_ref=$(_get_initial_commit_reference)
+    SPECIFIED_INTERVAL="$begin_ref$1"
+    shift ;;
   *..*)
     _exit_if_using_multiple_commands "$1"
     COMMAND='gen-release-notes'
     SPECIFIED_INTERVAL="$1"
     shift ;;
-  -r|--raw)
+  -r|--raw-titles)
     ARGUMENT_RAW='true'
     shift ;;
   -s|--short)
@@ -291,6 +329,14 @@ while [[ $# -gt 0 ]]; do
   -a|--all-commits)
     ARGUMENT_ALL_COMMITS='true'
     shift ;;
+  -lt|--from-latest-tag)
+    ARGUMENT_FROM_LATEST_TAG='true'
+    shift ;;
+  --format)
+    ARGUMENT_CUSTOM_OUTPUT_FORMAT='true'
+    SPECIFIED_OUTPUT_FORMAT="$2"
+    shift # past value
+    shift ;;
   -*)
     _show_invalid_usage_error_message "Unknown option '$1'!"
     exit 1 ;;
@@ -300,9 +346,12 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-_get_repo_url || exit 1
-_get_root_repo_dir || exit 1
-[ -f "$ROOT_REPO_DIR/.gen_release_notes" ] && (source "$ROOT_REPO_DIR/.gen_release_notes" || exit 1)
+
+if [[ "$COMMAND" != '--help' ]] && [[ "$COMMAND" != '--version' ]]; then
+  _get_repo_url || exit 1
+  _get_root_repo_dir || exit 1
+  [ -f "$ROOT_REPO_DIR/.gen_release_notes" ] && (source "$ROOT_REPO_DIR/.gen_release_notes" || exit 1)
+fi
 
 case "$COMMAND" in
 --help)

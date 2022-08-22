@@ -31,7 +31,7 @@ More than that you can change logging style with use of special parameters or ev
 
 To install gen-release-notes you can use one-liner (at any directory):
 
-    bash -c "tmp_dir=/tmp/installation-\$(date +%s%N); start_dir=\$(pwd); trap 'printf \"%b\" \"\n\e[0;31mInstallation failed\e[0m\n\n\"; cd \$start_dir; rm -r \$tmp_dir;' ERR; set -e; mkdir -p \$tmp_dir; cd \$tmp_dir; latest_release=\$(curl https://api.github.com/repos/Greewil/gen-release-notes/releases/latest | grep zipball | cut -d\\\" -f 4); printf '%b' '\ndownloading project packages ...\n\n'; curl \$latest_release -O -J -L; printf '%b' '\nunpacking ...\n\n'; unzip \$(ls | grep .zip); printf '%b' '\ninstalling project ...\n\n'; \$(ls -d ./*/)installer.sh; cd \$start_dir; rm -r \$tmp_dir; printf '%b' '\nThis installation command was generated with \e[1;34mhttps://github.com/Greewil/one-line-installer\e[0m\n\n'"
+    bash -c "tmp_dir=/tmp/installation-\$(date +%s%N); start_dir=\$(pwd); trap 'printf \"%b\" \"\n\e[0;31mInstallation failed\e[0m\n\n\"; cd \$start_dir; rm -r \$tmp_dir;' ERR; set -e; mkdir -p \$tmp_dir; cd \$tmp_dir; latest_release=\$(curl https://api.github.com/repos/Greewil/release-notes-generator/releases/latest | grep zipball | cut -d\\\" -f 4); printf '%b' '\ndownloading project packages ...\n\n'; curl \$latest_release -O -J -L; printf '%b' '\nunpacking ...\n\n'; unzip \$(ls | grep .zip); printf '%b' '\ninstalling project ...\n\n'; \$(ls -d ./*/)installer.sh; cd \$start_dir; rm -r \$tmp_dir; printf '%b' '\nThis installation command was generated with \e[1;34mhttps://github.com/Greewil/one-line-installer\e[0m\n\n'"
 
 (one-liner was generated with https://github.com/Greewil/one-line-installer)
 
@@ -74,14 +74,20 @@ To generate your own one line installer just follow the instructions after start
            - v1.0.1..v1.1.0
     
     Options:
-        -r, --raw                show only list of commit titles
-        -s, --short              show only titles of commits without message body
-        -a, --all-commits        release notes will be generated from all commits which are inside of specified interval
+        -r, --raw-titles         Show only commit titles in log message headers
+        -a, --all-commits        Release notes will be generated from all commits which are inside of specified interval
                                  (by default release notes will be generated only from conventional commits)
-        --single-list            release notes will be generated as single list of commit messages
+        --single-list            Release notes will be generated as single list of commit messages
                                  (by default log messages will be grouped by conventional commit types)
+        -lt, --from-latest-tag   Replace beginning of the interval with latest tag in repository
+                                 (so interval will be 'LATEST_TAG..<your_second_tag>')
+        -s, --short              Don't show commit body in log messages
+                                 Parameter won't work if you set your own format with '--format <your_format>'!
+        --format <your_format>   Set your own format for log message body.
+                                 Format the same as for 'git --pretty=format:<your_format>'.
+                                 (see more about git --pretty=format: here: https://git-scm.com/docs/pretty-formats)
     
-        Mutually exclusive parameters: (-s | --short), (-r | --raw-logs)
+        Mutually exclusive parameters: (-s | --short), (--format <your_format>)
     
     Custom configuration for projects
         If you want to use custom group headers or custom release header you can specify them in .gen_release_notes.
@@ -95,6 +101,7 @@ To generate your own one line installer just follow the instructions after start
     
     Generate release notes for your project.
     Script can generate release notes for your project from any directory inside of your local repository.
+    Project repository: https://github.com/Greewil/release-notes-generator
 
 ## License
 
