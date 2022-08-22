@@ -52,8 +52,9 @@ It can be useful if you don't want to select installation directories manually.
 
 Usage examples:
 
-    gen-release-notes v0.2.0..HEAD
-    gen-release-notes v0.2.0..HEAD -s -a --single-list
+    gen-release-notes v0.2.0..HEAD -f changelog.md
+    gen-release-notes .. -lt -f changelog.md
+    gen-release-notes .. -s -a --single-list -f changelog.md
 
 To generate your own one line installer just follow the instructions after starting generator script:
 
@@ -75,6 +76,7 @@ To generate your own one line installer just follow the instructions after start
     
     Options:
         -r, --raw-titles         Show only commit titles in log message headers
+        -f <file_name>           Save output to file
         -a, --all-commits        Release notes will be generated from all commits which are inside of specified interval
                                  (by default release notes will be generated only from conventional commits)
         --single-list            Release notes will be generated as single list of commit messages
