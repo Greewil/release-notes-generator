@@ -346,9 +346,12 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-_get_repo_url || exit 1
-_get_root_repo_dir || exit 1
-[ -f "$ROOT_REPO_DIR/.gen_release_notes" ] && (source "$ROOT_REPO_DIR/.gen_release_notes" || exit 1)
+
+if [[ "$COMMAND" != '--help' ]] && [[ "$COMMAND" != '--version' ]]; then
+  _get_repo_url || exit 1
+  _get_root_repo_dir || exit 1
+  [ -f "$ROOT_REPO_DIR/.gen_release_notes" ] && (source "$ROOT_REPO_DIR/.gen_release_notes" || exit 1)
+fi
 
 case "$COMMAND" in
 --help)
