@@ -18,7 +18,7 @@
 #/
 #/ Options:
 #/     -r, --raw-titles         Show only commit titles in log message headers
-#     -f <file_name>           Save output to file
+#/     -f <file_name>           Save output to file
 #/     -a, --all-commits        Release notes will be generated from all commits which are inside of specified interval
 #/                              (by default release notes will be generated only from conventional commits)
 #/     --single-list            Release notes will be generated as single list of commit messages
@@ -50,7 +50,7 @@
 # Written by Shishkin Sergey <shishkin.sergey.d@gmail.com>
 
 # Current generator version
-RELEASE_NOTES_GENERATOR_VERSION='0.2.0'
+RELEASE_NOTES_GENERATOR_VERSION='0.3.0'
 
 # all conventional commit types (Please don't modify!)
 CONVENTIONAL_COMMIT_TYPES=('build' 'ci' 'chore' 'docs' 'feat' 'fix' 'pref' 'refactor' 'revert' 'style' 'test')
@@ -181,7 +181,6 @@ function _collect_all_commits() {
 function _get_commit_info_by_hash() {
   commit_hash=$1
   format=$2
-#  echo "$format"
   git log "$commit_hash" -n 1 --pretty=format:"$format"
 }
 
@@ -284,7 +283,11 @@ function _get_release_notes_text() {
 function get_release_notes() {
   _collect_all_commits || exit 1
   _generate_commit_groups || exit 1
-  _get_release_notes_text || exit 1
+  if [ "$ARGUMENT_SAVE_OUTPUT" = 'true' ]; then
+    _get_release_notes_text > "$SPECIFIED_OUTPUT_FILE" || exit 1
+  else
+    _get_release_notes_text || exit 1
+  fi
 }
 
 function show_generator_version() {
@@ -335,6 +338,11 @@ while [[ $# -gt 0 ]]; do
   --format)
     ARGUMENT_CUSTOM_OUTPUT_FORMAT='true'
     SPECIFIED_OUTPUT_FORMAT="$2"
+    shift # past value
+    shift ;;
+  -f)
+    ARGUMENT_SAVE_OUTPUT='true'
+    SPECIFIED_OUTPUT_FILE="$2"
     shift # past value
     shift ;;
   -*)
