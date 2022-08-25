@@ -50,7 +50,7 @@
 # Written by Shishkin Sergey <shishkin.sergey.d@gmail.com>
 
 # Current generator version
-RELEASE_NOTES_GENERATOR_VERSION='0.3.0'
+RELEASE_NOTES_GENERATOR_VERSION='0.3.1'
 
 # all conventional commit types (Please don't modify!)
 CONVENTIONAL_COMMIT_TYPES=('build' 'ci' 'chore' 'docs' 'feat' 'fix' 'pref' 'refactor' 'revert' 'style' 'test')
@@ -358,7 +358,7 @@ done
 if [[ "$COMMAND" != '--help' ]] && [[ "$COMMAND" != '--version' ]]; then
   _get_repo_url || exit 1
   _get_root_repo_dir || exit 1
-  [ -f "$ROOT_REPO_DIR/.gen_release_notes" ] && (source "$ROOT_REPO_DIR/.gen_release_notes" || exit 1)
+  [ -f "$ROOT_REPO_DIR/.gen_release_notes" ] && { source "$ROOT_REPO_DIR/.gen_release_notes" || exit 1; }
 fi
 
 case "$COMMAND" in
