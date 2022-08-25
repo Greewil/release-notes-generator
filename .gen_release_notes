@@ -1,3 +1,5 @@
+# This is configuration file for generating release notes with https://github.com/Greewil/release-notes-generator
+
 # header:
 RELEASE_HEADER=''
 
