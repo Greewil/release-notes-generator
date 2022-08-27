@@ -86,6 +86,7 @@ To generate your own one line installer just follow the instructions after start
         -s, --short              Don't show commit body in log messages
                                  Parameter won't work if you set your own format with '--format <your_format>'!
         --format <your_format>   Set your own format for log message body.
+                                 Default format is '(%cn)%n%n%b'.
                                  Format the same as for 'git --pretty=format:<your_format>'.
                                  (see more about git --pretty=format: here: https://git-scm.com/docs/pretty-formats)
     
