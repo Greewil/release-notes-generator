@@ -51,7 +51,7 @@
 # Written by Shishkin Sergey <shishkin.sergey.d@gmail.com>
 
 # Current generator version
-RELEASE_NOTES_GENERATOR_VERSION='0.3.2'
+RELEASE_NOTES_GENERATOR_VERSION='0.3.3'
 
 # all conventional commit types (Please don't modify!)
 CONVENTIONAL_COMMIT_TYPES=('build' 'ci' 'chore' 'docs' 'feat' 'fix' 'pref' 'refactor' 'revert' 'style' 'test')
@@ -219,7 +219,14 @@ function _get_log_message() {
 }
 
 function _generate_commit_groups() {
-  [[ "$ALL_COMMITS" != '' ]] && while read -r commit_hash; do
+  if [ "$ALL_COMMITS" = '' ]; then
+    _show_warning_message "No commits were found!"
+    if [ "$ARGUMENT_SAVE_OUTPUT" = 'true' ]; then
+      '' > "$SPECIFIED_OUTPUT_FILE" || exit 1
+    fi
+    exit 0
+  fi
+  while read -r commit_hash; do
     commit_title=$(_get_commit_info_by_hash "$commit_hash" '%s')
     if [[ "$commit_title" =~ ^(build|ci|chore|docs|feat|fix|pref|refactor|revert|style|test)(\([a-z]+\))?!?:\ (.*) ]]; then
       type_index=$(_get_type_index_by_name "${BASH_REMATCH[1]}")
