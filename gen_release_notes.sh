@@ -51,7 +51,7 @@
 # Written by Shishkin Sergey <shishkin.sergey.d@gmail.com>
 
 # Current generator version
-RELEASE_NOTES_GENERATOR_VERSION='0.3.4'
+RELEASE_NOTES_GENERATOR_VERSION='0.3.3'
 
 # all conventional commit types (Please don't modify!)
 CONVENTIONAL_COMMIT_TYPES=('build' 'ci' 'chore' 'docs' 'feat' 'fix' 'pref' 'refactor' 'revert' 'style' 'test')
@@ -222,7 +222,7 @@ function _generate_commit_groups() {
   if [ "$ALL_COMMITS" = '' ]; then
     _show_warning_message "No commits were found!"
     if [ "$ARGUMENT_SAVE_OUTPUT" = 'true' ]; then
-      SPECIFIED_OUTPUT_FILE=''
+      echo '' > "$SPECIFIED_OUTPUT_FILE" || exit 1
     fi
     exit 0
   fi
