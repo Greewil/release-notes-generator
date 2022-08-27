@@ -50,7 +50,7 @@
 # Written by Shishkin Sergey <shishkin.sergey.d@gmail.com>
 
 # Current generator version
-RELEASE_NOTES_GENERATOR_VERSION='0.3.1'
+RELEASE_NOTES_GENERATOR_VERSION='0.3.2'
 
 # all conventional commit types (Please don't modify!)
 CONVENTIONAL_COMMIT_TYPES=('build' 'ci' 'chore' 'docs' 'feat' 'fix' 'pref' 'refactor' 'revert' 'style' 'test')
@@ -175,7 +175,11 @@ function _collect_all_commits() {
     first_pointer=$(_get_latest_tag)
     SPECIFIED_INTERVAL="$first_pointer..${SPECIFIED_INTERVAL#*..}"
   fi
-  ALL_COMMITS="$(git log "$SPECIFIED_INTERVAL" --oneline --pretty=format:%H)"
+  if [ "${SPECIFIED_INTERVAL%..*}" = "${SPECIFIED_INTERVAL#*..}" ]; then
+    ALL_COMMITS=''
+  else
+    ALL_COMMITS="$(git log "$SPECIFIED_INTERVAL" --oneline --pretty=format:%H)"
+  fi
 }
 
 function _get_commit_info_by_hash() {
@@ -214,7 +218,7 @@ function _get_log_message() {
 }
 
 function _generate_commit_groups() {
-  while read -r commit_hash; do
+  [[ "$ALL_COMMITS" != '' ]] && while read -r commit_hash; do
     commit_title=$(_get_commit_info_by_hash "$commit_hash" '%s')
     if [[ "$commit_title" =~ ^(build|ci|chore|docs|feat|fix|pref|refactor|revert|style|test)(\([a-z]+\))?!?:\ (.*) ]]; then
       type_index=$(_get_type_index_by_name "${BASH_REMATCH[1]}")
