@@ -51,7 +51,7 @@
 # Written by Shishkin Sergey <shishkin.sergey.d@gmail.com>
 
 # Current generator version
-RELEASE_NOTES_GENERATOR_VERSION='0.3.3'
+RELEASE_NOTES_GENERATOR_VERSION='1.0.0'
 
 # all conventional commit types (Please don't modify!)
 CONVENTIONAL_COMMIT_TYPES=('build' 'ci' 'chore' 'docs' 'feat' 'fix' 'pref' 'refactor' 'revert' 'style' 'test')
