@@ -58,13 +58,14 @@ Usage examples:
 
 To generate your own one line installer just follow the instructions after starting generator script:
 
-    Usage: gen-release-notes [-v | --version] [-h | --help] <interval> [<options>]
+    Usage: gen-release-notes [-v | --version] [-h | --help] [--show-repo-config] <interval> [<options>]
     
     Standalone commands:
         -h, --help               show help text
         -v, --version            show version
+        --show-repo-config            show config for current repository
     
-    Interval:
+    Commits interval:
         You should specify two commit pointers interval '<commit-pointer>..<commit-pointer>'.
         Commit pointer can be:
            - commit hash
@@ -74,7 +75,7 @@ To generate your own one line installer just follow the instructions after start
            - bc483c1..HEAD (equals to bc483c1..)
            - v1.0.1..v1.1.0
     
-    Options:
+    Generation options:
         -r, --raw-titles         Show only commit titles in log message headers
         -f <file_name>           Save output to file
         -a, --all-commits        Release notes will be generated from all commits which are inside of specified interval

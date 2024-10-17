@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 
-#/ Usage: gen-release-notes [-v | --version] [-h | --help] <interval> [<options>]
+#/ Usage: gen-release-notes [-v | --version] [-h | --help] [--show-repo-config] <interval> [<options>]
 #/
-#/ Standalone commands:
+#/ Standalone options:
 #/     -h, --help               show help text
 #/     -v, --version            show version
+#/     --show-repo-config            show config for current repository
 #/
-#/ Interval:
+#/ Commits interval:
 #/     You should specify two commit pointers interval '<commit-pointer>..<commit-pointer>'.
 #/     Commit pointer can be:
 #/        - commit hash
@@ -16,7 +17,7 @@
 #/        - bc483c1..HEAD (equals to bc483c1..)
 #/        - v1.0.1..v1.1.0
 #/
-#/ Options:
+#/ Generation options:
 #/     -r, --raw-titles         Show only commit titles in log message headers
 #/     -f <file_name>           Save output to file
 #/     -a, --all-commits        Release notes will be generated from all commits which are inside of specified interval
@@ -49,6 +50,7 @@
 #/ Project repository: https://github.com/Greewil/release-notes-generator
 #
 # Written by Shishkin Sergey <shishkin.sergey.d@gmail.com>
+# TODO use <interval> as option: '-i <interval>'
 
 # Current generator version
 RELEASE_NOTES_GENERATOR_VERSION='1.0.0'
@@ -292,6 +294,26 @@ function _get_release_notes_text() {
   fi
 }
 
+function _show_default_configuration() {
+  echo "
+  # This is default configuration.
+  # It will be used if there is no .gen_release_notes file in repository root.
+
+  RELEASE_HEADER='$RELEASE_HEADER'
+
+  BUILD_GROUP_HEADER='$BUILD_GROUP_HEADER'
+  CI_GROUP_HEADER='$CI_GROUP_HEADER'
+  CHORE_GROUP_HEADER='$CHORE_GROUP_HEADER'
+  DOCS_GROUP_HEADER='$DOCS_GROUP_HEADER'
+  FEAT_GROUP_HEADER='$FEAT_GROUP_HEADER'
+  FIX_GROUP_HEADER='$FIX_GROUP_HEADER'
+  PREF_GROUP_HEADER='$PREF_GROUP_HEADER'
+  REFACTOR_GROUP_HEADER='$REFACTOR_GROUP_HEADER'
+  REVERT_GROUP_HEADER='$REVERT_GROUP_HEADER'
+  STYLE_GROUP_HEADER='$STYLE_GROUP_HEADER'
+  TEST_GROUP_HEADER='$TEST_GROUP_HEADER'"
+}
+
 function get_release_notes() {
   _collect_all_commits || exit 1
   _generate_commit_groups || exit 1
@@ -310,6 +332,19 @@ function show_help() {
   grep '^#/' <"$0" | cut -c4-
 }
 
+function show_repository_config() {
+  if [ -f "$ROOT_REPO_DIR/.gen_release_notes" ]; then
+    cat "$ROOT_REPO_DIR/.gen_release_notes" || {
+      _show_error_message "Failed to get repository configuration from '$ROOT_REPO_DIR/.gen_release_notes'."
+      exit 1
+    }
+  else
+    _show_default_configuration || exit 1
+    _show_warning_message "Configuration file '$ROOT_REPO_DIR/.gen_release_notes' not found."
+    _show_warning_message "This repository doesn't contain configuration file so default configuration will be used."
+  fi
+}
+
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -320,6 +355,10 @@ while [[ $# -gt 0 ]]; do
   -v|--version)
     _exit_if_using_multiple_commands "$1"
     COMMAND='--version'
+    shift ;;
+  --show-repo-config)
+    _exit_if_using_multiple_commands "$1"
+    COMMAND='--show-config'
     shift ;;
   ..*)
     _exit_if_using_multiple_commands "$1"
@@ -380,6 +419,10 @@ case "$COMMAND" in
   ;;
 --version)
   show_generator_version
+  exit 0
+  ;;
+--show-config)
+  show_repository_config
   exit 0
   ;;
 gen-release-notes)
