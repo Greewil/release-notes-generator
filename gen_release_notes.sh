@@ -85,7 +85,6 @@ APP_NAME='gen-release-notes'
 NEUTRAL_COLOR='\e[0m'
 RED='\e[1;31m'        # for errors
 YELLOW='\e[1;33m'     # for warnings
-BROWN='\e[0;33m'      # for inputs
 LIGHT_CYAN='\e[1;36m' # for changes
 
 # Console input variables (Please don't modify!)
@@ -415,7 +414,8 @@ fi
 if [[ "$COMMAND" != '--help' ]] && [[ "$COMMAND" != '--version' ]]; then
   _get_repo_url || exit 1
   _get_root_repo_dir || exit 1
-  [ -f "$ROOT_REPO_DIR/.gen_release_notes" ] && { source "$ROOT_REPO_DIR/.gen_release_notes" || exit 1; }
+  # shellcheck source=/dev/null
+  [ -f "$ROOT_REPO_DIR/.gen_release_notes" ] && { . "$ROOT_REPO_DIR/.gen_release_notes" || exit 1; }
 fi
 
 case "$COMMAND" in
