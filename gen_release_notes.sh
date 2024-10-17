@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#/ Usage: gen-release-notes [-v | --version] [-h | --help] [--show-repo-config] <interval> [<options>]
+#/ Usage: gen-release-notes [-v | --version] [-h | --help] [--show-repo-config] [<options>]
 #/
 #/ Standalone options:
 #/     -h, --help               show help text
@@ -18,6 +18,7 @@
 #/        - v1.0.1..v1.1.0
 #/
 #/ Generation options:
+#/     -i <interval>            Set commit interval (go to 'Commits interval' paragraph of the help for more info)
 #/     -r, --raw-titles         Show only commit titles in log message headers
 #/     -f <file_name>           Save output to file
 #/     -a, --all-commits        Release notes will be generated from all commits which are inside of specified interval
@@ -50,7 +51,6 @@
 #/ Project repository: https://github.com/Greewil/release-notes-generator
 #
 # Written by Shishkin Sergey <shishkin.sergey.d@gmail.com>
-# TODO use <interval> as option: '-i <interval>'
 
 # Current generator version
 RELEASE_NOTES_GENERATOR_VERSION='1.0.0'
@@ -131,7 +131,7 @@ function _show_invalid_usage_error_message() {
 function _exit_if_using_multiple_commands() {
   last_command=$1
   if [ "$COMMAND" != '' ]; then
-    _show_invalid_usage_error_message "You can't use both commands: '$COMMAND' and '$last_command'!"
+    _show_invalid_usage_error_message "You can't use both options: '$COMMAND' and '$last_command'!"
     exit 1
   fi
 }
@@ -360,16 +360,17 @@ while [[ $# -gt 0 ]]; do
     _exit_if_using_multiple_commands "$1"
     COMMAND='--show-config'
     shift ;;
-  ..*)
+  -i)
     _exit_if_using_multiple_commands "$1"
     COMMAND='gen-release-notes'
-    begin_ref=$(_get_initial_commit_reference)
-    SPECIFIED_INTERVAL="$begin_ref$1"
-    shift ;;
-  *..*)
-    _exit_if_using_multiple_commands "$1"
-    COMMAND='gen-release-notes'
-    SPECIFIED_INTERVAL="$1"
+    SPECIFIED_INTERVAL="$2"
+    if [[ "$SPECIFIED_INTERVAL" == ..* ]]; then
+      begin_ref=$(_get_initial_commit_reference)
+      SPECIFIED_INTERVAL="$begin_ref$SPECIFIED_INTERVAL"
+    elif [[ ! "$SPECIFIED_INTERVAL" == *..* ]]; then
+      _show_error_message "Incorrect commits interval: '$SPECIFIED_INTERVAL'."
+    fi
+    shift # past value
     shift ;;
   -r|--raw-titles)
     ARGUMENT_RAW='true'
@@ -404,6 +405,11 @@ while [[ $# -gt 0 ]]; do
     exit 1 ;;
   esac
 done
+
+if [ "$COMMAND" = '' ]; then
+  _show_error_message 'Commits interval should be specified!'
+  exit 1
+fi
 
 
 if [[ "$COMMAND" != '--help' ]] && [[ "$COMMAND" != '--version' ]]; then

@@ -58,7 +58,7 @@ Usage examples:
 
 To generate your own one line installer just follow the instructions after starting generator script:
 
-    Usage: gen-release-notes [-v | --version] [-h | --help] [--show-repo-config] <interval> [<options>]
+    Usage: gen-release-notes [-v | --version] [-h | --help] [--show-repo-config] [<options>]
     
     Standalone commands:
         -h, --help               show help text
@@ -76,6 +76,7 @@ To generate your own one line installer just follow the instructions after start
            - v1.0.1..v1.1.0
     
     Generation options:
+        -i <interval>            Set commit interval (go to 'Commits interval' paragraph of the help for more info)
         -r, --raw-titles         Show only commit titles in log message headers
         -f <file_name>           Save output to file
         -a, --all-commits        Release notes will be generated from all commits which are inside of specified interval
