@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 
-#function _remove_word_from_option_list() {
-#  #
-#}
 
 function _gen_release_notes_completion() {
   latest="${COMP_WORDS[$COMP_CWORD]}"
   prev="${COMP_WORDS[$COMP_CWORD - 1]}"
+
   # if there are no commands yet search for commands
   all_standalone_commands="-h --help -v --version --show-repo-config"
   all_options="-i --raw-titles -f -a --all-commits --single-list -lt --from-latest-tag -s --short --format"
   options="$all_options "  # should be ' ' at the end for correct extraction
   words="$all_standalone_commands $options "  # should be ' ' at the end for correct extraction
+
+  complete_filepath='false'
 
   # run throw all typed words
   for i in "${COMP_WORDS[@]}"; do
@@ -60,19 +60,21 @@ function _gen_release_notes_completion() {
 
   # waiting for option value to pass
   case "$prev" in
-  -i)
+  -i|--format)
     words=""
     ;;
   -f)
-    words=""  # TODO use directory completion
-    ;;
-  --format)
-    words=""
+    complete_filepath='true'
     ;;
   esac
 
-  # shellcheck disable=SC2207
-  COMPREPLY=( $(compgen -W "$words" -- "$latest") )
+  if [ "$complete_filepath" = 'true' ]; then
+    # shellcheck disable=SC2207
+    COMPREPLY=( $(compgen -f -- "$latest") )
+  else
+    # shellcheck disable=SC2207
+    COMPREPLY=( $(compgen -W "$words" -- "$latest") )
+  fi
 }
 
 complete -F _gen_release_notes_completion gen-release-notes
