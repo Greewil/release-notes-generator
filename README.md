@@ -52,9 +52,9 @@ It can be useful if you don't want to select installation directories manually.
 
 Usage examples:
 
-    gen-release-notes v0.2.0..HEAD -f changelog.md
-    gen-release-notes .. -lt -f changelog.md
-    gen-release-notes .. -s -a --single-list -f changelog.md
+    gen-release-notes -i v0.2.0..HEAD -f changelog.md
+    gen-release-notes -i .. -lt -f changelog.md
+    gen-release-notes -i .. -s -a --single-list -f changelog.md
 
 To generate your own one line installer just follow the instructions after starting generator script:
 
@@ -63,7 +63,7 @@ To generate your own one line installer just follow the instructions after start
     Standalone commands:
         -h, --help               show help text
         -v, --version            show version
-        --show-repo-config            show config for current repository
+        --show-repo-config       show config for current repository
     
     Commits interval:
         You should specify two commit pointers interval '<commit-pointer>..<commit-pointer>'.

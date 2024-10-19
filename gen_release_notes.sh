@@ -5,7 +5,7 @@
 #/ Standalone options:
 #/     -h, --help               show help text
 #/     -v, --version            show version
-#/     --show-repo-config            show config for current repository
+#/     --show-repo-config       show config for current repository
 #/
 #/ Commits interval:
 #/     You should specify two commit pointers interval '<commit-pointer>..<commit-pointer>'.
@@ -53,7 +53,7 @@
 # Written by Shishkin Sergey <shishkin.sergey.d@gmail.com>
 
 # Current generator version
-RELEASE_NOTES_GENERATOR_VERSION='1.0.1'
+RELEASE_NOTES_GENERATOR_VERSION='1.0.2'
 
 # all conventional commit types (Please don't modify!)
 CONVENTIONAL_COMMIT_TYPES=('build' 'ci' 'chore' 'docs' 'feat' 'fix' 'pref' 'refactor' 'revert' 'style' 'test')
