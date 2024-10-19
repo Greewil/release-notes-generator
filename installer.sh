@@ -63,6 +63,7 @@ function _yes_no_question() {
 function _get_input() {
   ask_input_message=$1
   output_variable_name=$2
+  # shellcheck disable=SC2229
   read -p "$(echo -e "$BROWN($APP_NAME : INPUT) $ask_input_message: $NEUTRAL_COLOR")" -r "$output_variable_name"
 }
 

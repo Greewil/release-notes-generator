@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 
-#/ Usage: gen-release-notes [-v | --version] [-h | --help] <interval> [<options>]
+#/ Usage: gen-release-notes [-v | --version] [-h | --help] [--show-repo-config] [<options>]
 #/
-#/ Standalone commands:
+#/ Standalone options:
 #/     -h, --help               show help text
 #/     -v, --version            show version
+#/     --show-repo-config            show config for current repository
 #/
-#/ Interval:
+#/ Commits interval:
 #/     You should specify two commit pointers interval '<commit-pointer>..<commit-pointer>'.
 #/     Commit pointer can be:
 #/        - commit hash
@@ -16,7 +17,8 @@
 #/        - bc483c1..HEAD (equals to bc483c1..)
 #/        - v1.0.1..v1.1.0
 #/
-#/ Options:
+#/ Generation options:
+#/     -i <interval>            Set commit interval (go to 'Commits interval' paragraph of the help for more info)
 #/     -r, --raw-titles         Show only commit titles in log message headers
 #/     -f <file_name>           Save output to file
 #/     -a, --all-commits        Release notes will be generated from all commits which are inside of specified interval
@@ -51,7 +53,7 @@
 # Written by Shishkin Sergey <shishkin.sergey.d@gmail.com>
 
 # Current generator version
-RELEASE_NOTES_GENERATOR_VERSION='0.3.3'
+RELEASE_NOTES_GENERATOR_VERSION='1.0.0'
 
 # all conventional commit types (Please don't modify!)
 CONVENTIONAL_COMMIT_TYPES=('build' 'ci' 'chore' 'docs' 'feat' 'fix' 'pref' 'refactor' 'revert' 'style' 'test')
@@ -83,7 +85,6 @@ APP_NAME='gen-release-notes'
 NEUTRAL_COLOR='\e[0m'
 RED='\e[1;31m'        # for errors
 YELLOW='\e[1;33m'     # for warnings
-BROWN='\e[0;33m'      # for inputs
 LIGHT_CYAN='\e[1;36m' # for changes
 
 # Console input variables (Please don't modify!)
@@ -129,7 +130,7 @@ function _show_invalid_usage_error_message() {
 function _exit_if_using_multiple_commands() {
   last_command=$1
   if [ "$COMMAND" != '' ]; then
-    _show_invalid_usage_error_message "You can't use both commands: '$COMMAND' and '$last_command'!"
+    _show_invalid_usage_error_message "You can't use both options: '$COMMAND' and '$last_command'!"
     exit 1
   fi
 }
@@ -292,6 +293,26 @@ function _get_release_notes_text() {
   fi
 }
 
+function _show_default_configuration() {
+  echo "
+  # This is default configuration.
+  # It will be used if there is no .gen_release_notes file in repository root.
+
+  RELEASE_HEADER='$RELEASE_HEADER'
+
+  BUILD_GROUP_HEADER='$BUILD_GROUP_HEADER'
+  CI_GROUP_HEADER='$CI_GROUP_HEADER'
+  CHORE_GROUP_HEADER='$CHORE_GROUP_HEADER'
+  DOCS_GROUP_HEADER='$DOCS_GROUP_HEADER'
+  FEAT_GROUP_HEADER='$FEAT_GROUP_HEADER'
+  FIX_GROUP_HEADER='$FIX_GROUP_HEADER'
+  PREF_GROUP_HEADER='$PREF_GROUP_HEADER'
+  REFACTOR_GROUP_HEADER='$REFACTOR_GROUP_HEADER'
+  REVERT_GROUP_HEADER='$REVERT_GROUP_HEADER'
+  STYLE_GROUP_HEADER='$STYLE_GROUP_HEADER'
+  TEST_GROUP_HEADER='$TEST_GROUP_HEADER'"
+}
+
 function get_release_notes() {
   _collect_all_commits || exit 1
   _generate_commit_groups || exit 1
@@ -310,6 +331,19 @@ function show_help() {
   grep '^#/' <"$0" | cut -c4-
 }
 
+function show_repository_config() {
+  if [ -f "$ROOT_REPO_DIR/.gen_release_notes" ]; then
+    cat "$ROOT_REPO_DIR/.gen_release_notes" || {
+      _show_error_message "Failed to get repository configuration from '$ROOT_REPO_DIR/.gen_release_notes'."
+      exit 1
+    }
+  else
+    _show_default_configuration || exit 1
+    _show_warning_message "Configuration file '$ROOT_REPO_DIR/.gen_release_notes' not found."
+    _show_warning_message "This repository doesn't contain configuration file so default configuration will be used."
+  fi
+}
+
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -321,16 +355,21 @@ while [[ $# -gt 0 ]]; do
     _exit_if_using_multiple_commands "$1"
     COMMAND='--version'
     shift ;;
-  ..*)
+  --show-repo-config)
     _exit_if_using_multiple_commands "$1"
-    COMMAND='gen-release-notes'
-    begin_ref=$(_get_initial_commit_reference)
-    SPECIFIED_INTERVAL="$begin_ref$1"
+    COMMAND='--show-config'
     shift ;;
-  *..*)
+  -i)
     _exit_if_using_multiple_commands "$1"
     COMMAND='gen-release-notes'
-    SPECIFIED_INTERVAL="$1"
+    SPECIFIED_INTERVAL="$2"
+    if [[ "$SPECIFIED_INTERVAL" == ..* ]]; then
+      begin_ref=$(_get_initial_commit_reference)
+      SPECIFIED_INTERVAL="$begin_ref$SPECIFIED_INTERVAL"
+    elif [[ ! "$SPECIFIED_INTERVAL" == *..* ]]; then
+      _show_error_message "Incorrect commits interval: '$SPECIFIED_INTERVAL'."
+    fi
+    shift # past value
     shift ;;
   -r|--raw-titles)
     ARGUMENT_RAW='true'
@@ -366,11 +405,17 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+if [ "$COMMAND" = '' ]; then
+  _show_error_message 'Commits interval should be specified!'
+  exit 1
+fi
+
 
 if [[ "$COMMAND" != '--help' ]] && [[ "$COMMAND" != '--version' ]]; then
   _get_repo_url || exit 1
   _get_root_repo_dir || exit 1
-  [ -f "$ROOT_REPO_DIR/.gen_release_notes" ] && { source "$ROOT_REPO_DIR/.gen_release_notes" || exit 1; }
+  # shellcheck source=/dev/null
+  [ -f "$ROOT_REPO_DIR/.gen_release_notes" ] && { . "$ROOT_REPO_DIR/.gen_release_notes" || exit 1; }
 fi
 
 case "$COMMAND" in
@@ -380,6 +425,10 @@ case "$COMMAND" in
   ;;
 --version)
   show_generator_version
+  exit 0
+  ;;
+--show-config)
+  show_repository_config
   exit 0
   ;;
 gen-release-notes)

@@ -1,0 +1,17 @@
+name: Quality Assurance
+
+on: [workflow_call]
+
+jobs:
+
+  quality-assurance:
+    name: Quality Assurance
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Lint
+        uses: azohra/shell-linter@latest
+        with:
+          path: "gen_release_notes.sh,gen-release-notes-completion.sh,installer.sh"
+
