@@ -19,6 +19,7 @@ jobs:
     with:
       VUH_VERSION: 'v2.5.0'
       CHANGELOG_GENERATOR_VERSION: 'v0.3.3'
+#      CHANGELOG_GENERATOR_VERSION: 'v1.0.0'
 
   publish-pypi:
     name: Publish to test pypi
