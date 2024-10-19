@@ -34,7 +34,7 @@ jobs:
       - name: generate release notes
         id: changelog
         run: |
-          ./gen_release_notes.sh .. -lt -f changelog.md
+          ./gen_release_notes.sh -i .. -lt -f changelog.md
 
           [ -f "changelog.md" ] && CHANGELOG=$(cat changelog.md) || CHANGELOG=''
           CHANGELOG="${CHANGELOG//'%'/'%25'}"

@@ -3,7 +3,6 @@ name: CI
 on:
   push:
     branches: [ "main" ]
-
   workflow_dispatch:
 
 jobs:
@@ -15,14 +14,7 @@ jobs:
   release-notes-generation:
     name: Release generation
     uses: ./.github/workflows/release-notes-generation.yml
-    needs: quality-assurance
     with:
       VUH_VERSION: 'v2.5.0'
-      CHANGELOG_GENERATOR_VERSION: 'v0.3.3'
-#      CHANGELOG_GENERATOR_VERSION: 'v1.0.0'
-
-  publish-pypi:
-    name: Publish to test pypi
-    uses: ./.github/workflows/publish-pypi.yml
-    needs: quality-assurance    
-
+      CHANGELOG_GENERATOR_VERSION: 'v1.0.0'
+    needs: quality-assurance
