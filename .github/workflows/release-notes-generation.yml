@@ -22,7 +22,8 @@ jobs:
 
       - name: download release notes generator
         run: |
-          curl https://raw.githubusercontent.com/Greewil/release-notes-generator/${{ inputs.CHANGELOG_GENERATOR_VERSION }}/gen_release_notes.sh -O -J -L
+#          If you want to use same workflow in another repos you should download needed version of release-notes-generator
+#          curl https://raw.githubusercontent.com/Greewil/release-notes-generator/${{ inputs.CHANGELOG_GENERATOR_VERSION }}/gen_release_notes.sh -O -J -L
           chmod +x gen_release_notes.sh
 
       - name: get release tag_name
