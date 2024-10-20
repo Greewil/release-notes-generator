@@ -31,9 +31,9 @@ jobs:
       - name: get release tag_name
         id: release_version
         run: |
-          ./vuh.sh lv -q > release_version.txt
-          echo "release version: $(cat release_version.txt)" 
-          echo "::set-output name=release_version::$(cat release_version.txt)"
+          cur_version=$(./vuh.sh lv -q)
+          echo "release version: $cur_version" 
+          echo "RELEASE_VERSION=$cur_version" >> "$GITHUB_OUTPUT"
 
       - name: generate release notes
         id: changelog
@@ -44,17 +44,17 @@ jobs:
           CHANGELOG="${CHANGELOG//'%'/'%25'}"
           CHANGELOG="${CHANGELOG//$'\n'/'%0A'}"
           CHANGELOG="${CHANGELOG//$'\r'/'%0D'}"
-          echo "::set-output name=final_changelog::$(echo "$CHANGELOG")"
+          echo "FINAL_CHANGELOG='$CHANGELOG'" >> "$GITHUB_OUTPUT"
 
-          [ -f 'changelog.md' ] && echo "::set-output name=empty::false"
-          [ -f 'changelog.md' ] || echo "::set-output name=empty::true"
+          [ -f 'changelog.md' ] && echo "IS_EMPTY=false" >> "$GITHUB_OUTPUT"
+          [ -f 'changelog.md' ] || echo "IS_EMPTY=true" >> "$GITHUB_OUTPUT"
 
       - name: Create Release
         uses: actions/create-release@v1
-        if: ${{ steps.changelog.outputs.empty == 'false' }}
+        if: ${{ steps.changelog.outputs.IS_EMPTY == 'false' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: "v${{ steps.release_version.outputs.release_version }}"
-          release_name: "v${{ steps.release_version.outputs.release_version }}"
-          body: ${{ steps.changelog.outputs.final_changelog }}
+          tag_name: "v${{ steps.release_version.outputs.RELEASE_VERSION }}"
+          release_name: "v${{ steps.release_version.outputs.RELEASE_VERSION }}"
+          body: ${{ steps.changelog.outputs.FINAL_CHANGELOG }}
