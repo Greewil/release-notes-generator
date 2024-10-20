@@ -14,6 +14,8 @@ jobs:
 
       - name: Git clone this repo
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: download vuh
         run: |
