@@ -20,11 +20,11 @@ jobs:
           curl https://raw.githubusercontent.com/Greewil/version-update-helper/${{ inputs.VUH_VERSION }}/vuh.sh -O -J -L
           chmod +x vuh.sh
 
-      - name: download release notes generator
-        run: |
-#          If you want to use same workflow in another repos you should download needed version of release-notes-generator
+#      If you want to use same workflow in another repos you should download needed version of release-notes-generator
+#      - name: download release notes generator
+#        run: |
 #          curl https://raw.githubusercontent.com/Greewil/release-notes-generator/${{ inputs.CHANGELOG_GENERATOR_VERSION }}/gen_release_notes.sh -O -J -L
-          chmod +x gen_release_notes.sh
+#          chmod +x gen_release_notes.sh
 
       - name: get release tag_name
         id: release_version
