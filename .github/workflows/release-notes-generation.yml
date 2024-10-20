@@ -39,13 +39,9 @@ jobs:
         id: changelog
         run: |
           ./gen_release_notes.sh -i .. -lt -f changelog.md
-
           [ -f "changelog.md" ] && CHANGELOG=$(cat changelog.md) || CHANGELOG=''
-          CHANGELOG="${CHANGELOG//'%'/'%25'}"
-          CHANGELOG="${CHANGELOG//$'\n'/'%0A'}"
-          CHANGELOG="${CHANGELOG//$'\r'/'%0D'}"
           echo "$CHANGELOG"
-          echo "FINAL_CHANGELOG=$CHANGELOG" >> "$GITHUB_OUTPUT"
+          echo "FINAL_CHANGELOG='$CHANGELOG'" >> "$GITHUB_OUTPUT"
 
           [ -f 'changelog.md' ] && echo "IS_EMPTY=false" >> "$GITHUB_OUTPUT"
           [ -f 'changelog.md' ] || echo "IS_EMPTY=true" >> "$GITHUB_OUTPUT"
