@@ -44,7 +44,8 @@ jobs:
           CHANGELOG="${CHANGELOG//'%'/'%25'}"
           CHANGELOG="${CHANGELOG//$'\n'/'%0A'}"
           CHANGELOG="${CHANGELOG//$'\r'/'%0D'}"
-          echo "FINAL_CHANGELOG='$CHANGELOG'" >> "$GITHUB_OUTPUT"
+          echo "$CHANGELOG"
+          echo "FINAL_CHANGELOG=$CHANGELOG" >> "$GITHUB_OUTPUT"
 
           [ -f 'changelog.md' ] && echo "IS_EMPTY=false" >> "$GITHUB_OUTPUT"
           [ -f 'changelog.md' ] || echo "IS_EMPTY=true" >> "$GITHUB_OUTPUT"
