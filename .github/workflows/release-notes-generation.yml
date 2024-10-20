@@ -13,7 +13,7 @@ jobs:
     steps:
 
       - name: Git clone this repo
-        uses: actions/checkout@v1
+        uses: actions/checkout@v4
 
       - name: download vuh
         run: |
@@ -29,6 +29,7 @@ jobs:
         id: release_version
         run: |
           ./vuh.sh lv -q > release_version.txt
+          echo "release version: $(cat release_version.txt)" 
           echo "::set-output name=release_version::$(cat release_version.txt)"
 
       - name: generate release notes
