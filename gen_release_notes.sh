@@ -53,7 +53,7 @@
 # Written by Shishkin Sergey <shishkin.sergey.d@gmail.com>
 
 # Current generator version
-RELEASE_NOTES_GENERATOR_VERSION='1.0.3'
+RELEASE_NOTES_GENERATOR_VERSION='1.0.4'
 
 # all conventional commit types (Please don't modify!)
 CONVENTIONAL_COMMIT_TYPES=('build' 'ci' 'chore' 'docs' 'feat' 'fix' 'pref' 'refactor' 'revert' 'style' 'test')
@@ -124,7 +124,7 @@ function _show_updated_message() {
 function _show_invalid_usage_error_message() {
   message=$1
   _show_error_message "$message"
-  echo 'Use "gen-release-notes --help" to see available commands and options information'
+  echo "Use '$APP_NAME --help' to see available commands and options information"
 }
 
 function _exit_if_using_multiple_commands() {
@@ -324,7 +324,7 @@ function get_release_notes() {
 }
 
 function show_generator_version() {
-  echo "gen-release-notes version: $RELEASE_NOTES_GENERATOR_VERSION"
+  echo "$APP_NAME version: $RELEASE_NOTES_GENERATOR_VERSION"
 }
 
 function show_help() {
