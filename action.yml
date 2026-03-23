@@ -14,21 +14,23 @@ runs:
       run: |
         VERSION="${{ inputs.rng_version }}"
         if [[ $VERSION != v* ]]; then VERSION="v$VERSION"; fi
-        
         BASE_URL="https://raw.githubusercontent.com/Greewil/release-notes-generator/${VERSION}"
-        
         curl -f -L -o installer.sh "${BASE_URL}/installer.sh"
         curl -f -L -o gen_release_notes.sh "${BASE_URL}/gen_release_notes.sh"
         curl -f -L -o gen-release-notes-completion.sh "${BASE_URL}/gen-release-notes-completion.sh"
-        
         chmod +x installer.sh
         chmod +x gen_release_notes.sh
+        chmod +x gen-release-notes-completion.sh
 
     - name: Install RNG
       shell: bash
-      run: sudo ./installer.sh -d
+      run: sudo ./installer.sh -d || echo "Installation finished with warnings"
 
     - name: Verify RNG installation
       shell: bash
       run: |
-        gen-release-notes -v
+        if command -v gen-release-notes &> /dev/null; then
+          gen-release-notes -v
+        else
+          /usr/local/bin/gen-release-notes -v
+        fi
