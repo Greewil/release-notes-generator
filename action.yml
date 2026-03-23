@@ -1,17 +1,10 @@
-name: Generate Release Notes
-description: Install release-notes-generator
+name: Install release-notes-generator
+description: Install RNG
+
 inputs:
   rng_version:
     description: "Release Notes Generator version (e.g., v1.0.3 or 1.0.3)"
     required: true
-
-outputs:
-  changelog:
-    description: "Generated changelog content"
-    value: ${{ steps.changelog.outputs.changelog }}
-  is_empty:
-    description: "True if changelog is empty"
-    value: ${{ steps.changelog.outputs.is_empty }}
 
 runs:
   using: composite
@@ -32,16 +25,7 @@ runs:
       shell: bash
       run: sudo ./installer.sh -d
 
-    - name: Generate release notes
-      id: changelog
+      name: Verify RNG installation
       shell: bash
       run: |
-        gen-release-notes -i .. -lt -f changelog.md
-        [ -f "changelog.md" ] && CHANGELOG=$(cat changelog.md) || CHANGELOG=''
-        echo "$CHANGELOG"
-        echo 'changelog<<EOF' >> "$GITHUB_OUTPUT"
-        echo "$CHANGELOG" >> "$GITHUB_OUTPUT"
-        echo 'EOF' >> "$GITHUB_OUTPUT"
-
-        [ -f 'changelog.md' ] && echo "is_empty=false" >> "$GITHUB_OUTPUT"
-        [ -f 'changelog.md' ] || echo "is_empty=true" >> "$GITHUB_OUTPUT"
+        gen-release-notes -v
