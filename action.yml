@@ -21,7 +21,7 @@ runs:
         chmod +x installer.sh
         chmod +x gen_release_notes.sh
         chmod +x gen-release-notes-completion.sh
-
+        
     - name: Install RNG
       shell: bash
       run: sudo ./installer.sh -d || echo "Installation finished with warnings"
