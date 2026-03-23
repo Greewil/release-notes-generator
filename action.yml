@@ -14,10 +14,13 @@ runs:
       run: |
         VERSION="${{ inputs.rng_version }}"
         if [[ $VERSION != v* ]]; then VERSION="v$VERSION"; fi
-        curl -f -L -o installer.sh \
-          "https://raw.githubusercontent.com/Greewil/release-notes-generator/${VERSION}/installer.sh"
-        curl -f -L -o gen_release_notes.sh \
-          "https://raw.githubusercontent.com/Greewil/release-notes-generator/${VERSION}/gen_release_notes.sh"
+        
+        BASE_URL="https://raw.githubusercontent.com/Greewil/release-notes-generator/${VERSION}"
+        
+        curl -f -L -o installer.sh "${BASE_URL}/installer.sh"
+        curl -f -L -o gen_release_notes.sh "${BASE_URL}/gen_release_notes.sh"
+        curl -f -L -o gen-release-notes-completion.sh "${BASE_URL}/gen-release-notes-completion.sh"
+        
         chmod +x installer.sh
         chmod +x gen_release_notes.sh
 
