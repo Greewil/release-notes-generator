@@ -26,7 +26,7 @@ runs:
       shell: bash
       run: |
         gen-release-notes -i . -lt -f changelog.md
-        if [ -f "changelog.md" ]; then
+        if [ -s "changelog.md" ]; then
           CHANGELOG=$(cat changelog.md)
           echo "is_empty=false" >> "$GITHUB_OUTPUT"
         else
