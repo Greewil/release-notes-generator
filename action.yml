@@ -1,5 +1,4 @@
 name: Generate Release Notes
-description: Install release-notes-generator
 inputs:
   rng_version:
     description: "Release Notes Generator version (e.g., v1.0.3 or 1.0.3)"
