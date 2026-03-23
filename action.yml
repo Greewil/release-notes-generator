@@ -17,7 +17,7 @@ runs:
   using: composite
   steps:
     - name: Install Release Notes Generator
-      uses: Greewil/release-notes-generator@gha/install/v1
+      uses: awdazxc/release-notes-generator@gha/install/v1
 
     - name: Generate release notes
       id: changelog
