@@ -25,7 +25,7 @@ runs:
       shell: bash
       run: sudo ./installer.sh -d
 
-      name: Verify RNG installation
+    - name: Verify RNG installation
       shell: bash
       run: |
         gen-release-notes -v
