@@ -1,36 +1,37 @@
-name: Install release-notes-generator
-description: Install RNG
-
+name: Generate Release Notes
 inputs:
   rng_version:
     description: "Release Notes Generator version (e.g., v1.0.3 or 1.0.3)"
     required: true
 
+outputs:
+  changelog:
+    description: "Generated changelog content"
+    value: ${{ steps.changelog.outputs.changelog }}
+  is_empty:
+    description: "True if changelog is empty"
+    value: ${{ steps.changelog.outputs.is_empty }}
+
 runs:
   using: composite
   steps:
-    - name: Download RNG
-      shell: bash
-      run: |
-        VERSION="${{ inputs.rng_version }}"
-        if [[ $VERSION != v* ]]; then VERSION="v$VERSION"; fi
-        BASE_URL="https://raw.githubusercontent.com/Greewil/release-notes-generator/${VERSION}"
-        curl -f -L -o installer.sh "${BASE_URL}/installer.sh"
-        curl -f -L -o gen_release_notes.sh "${BASE_URL}/gen_release_notes.sh"
-        curl -f -L -o gen-release-notes-completion.sh "${BASE_URL}/gen-release-notes-completion.sh"
-        chmod +x installer.sh
-        chmod +x gen_release_notes.sh
-        chmod +x gen-release-notes-completion.sh
-        
-    - name: Install RNG
-      shell: bash
-      run: sudo ./installer.sh -d || echo "Installation finished with warnings"
+    - name: Install Release Notes Generator
+      uses: awdazxc/release-notes-generator@gha/install/v1
+      with:
+        rng_version: ${{ inputs.rng_version }}
 
-    - name: Verify RNG installation
+    - name: Generate release notes
+      id: changelog
       shell: bash
       run: |
-        if command -v gen-release-notes &> /dev/null; then
-          gen-release-notes -v
+        gen-release-notes -i . -lt -f changelog.md
+        if [ -s "changelog.md" ]; then
+          CHANGELOG=$(cat changelog.md)
+          echo "is_empty=false" >> "$GITHUB_OUTPUT"
         else
-          /usr/local/bin/gen-release-notes -v
+          CHANGELOG=''
+          echo "is_empty=true" >> "$GITHUB_OUTPUT"
         fi
+        echo "changelog<<EOF" >> "$GITHUB_OUTPUT"
+        echo "$CHANGELOG" >> "$GITHUB_OUTPUT"
+        echo "EOF" >> "$GITHUB_OUTPUT"
