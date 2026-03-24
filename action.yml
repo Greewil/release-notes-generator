@@ -1,37 +1,58 @@
 name: Generate Release Notes
 inputs:
   rng_version:
-    description: "Release Notes Generator version (e.g., v1.0.3 or 1.0.3)"
+    description: "Release Notes Generator version"
     required: true
+  create_release:
+    description: "Whether to create a GitHub Release"
+    required: false
+    default: "false"
+  tag_name:
+    description: "The name of the tag for the release"
+    required: false
 
 outputs:
   changelog:
     description: "Generated changelog content"
-    value: ${{ steps.changelog.outputs.changelog }}
+    value: ${{ steps.changelog.outputs.FINAL_CHANGELOG }}
   is_empty:
     description: "True if changelog is empty"
-    value: ${{ steps.changelog.outputs.is_empty }}
+    value: ${{ steps.changelog.outputs.IS_EMPTY }}
 
 runs:
   using: composite
   steps:
     - name: Install Release Notes Generator
-      uses: awdazxc/release-notes-generator@gha/install/v1
+      uses: Greewil/release-notes-generator@gha/install/v1
       with:
         rng_version: ${{ inputs.rng_version }}
 
-    - name: Generate release notes
+    - name: generate release notes
       id: changelog
       shell: bash
       run: |
         gen-release-notes -i . -lt -f changelog.md
+        
         if [ -s "changelog.md" ]; then
           CHANGELOG=$(cat changelog.md)
-          echo "is_empty=false" >> "$GITHUB_OUTPUT"
+          echo "IS_EMPTY=false" >> "$GITHUB_OUTPUT"
         else
           CHANGELOG=''
-          echo "is_empty=true" >> "$GITHUB_OUTPUT"
+          echo "IS_EMPTY=true" >> "$GITHUB_OUTPUT"
         fi
-        echo "changelog<<EOF" >> "$GITHUB_OUTPUT"
+        
+        echo "FINAL_CHANGELOG<<EOF" >> "$GITHUB_OUTPUT"
         echo "$CHANGELOG" >> "$GITHUB_OUTPUT"
         echo "EOF" >> "$GITHUB_OUTPUT"
+
+    - name: Create Release
+      if: inputs.create_release == 'true' && steps.changelog.outputs.IS_EMPTY == 'false'
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      with:
+        tag_name: ${{ inputs.tag_name || github.ref_name }}
+        release_name: ${{ inputs.tag_name || github.ref_name }}
+        body: ${{ steps.changelog.outputs.FINAL_CHANGELOG }}
+        draft: false
+        prerelease: false
