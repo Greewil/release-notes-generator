@@ -16,7 +16,7 @@ runs:
   using: composite
   steps:
     - name: Install Release Notes Generator
-      uses: awdazxc/release-notes-generator@gha/install/v1
+      uses: Greewil/release-notes-generator@gha/install/v1
       with:
         rng_version: ${{ inputs.rng_version }}
 
