@@ -47,12 +47,10 @@ runs:
 
     - name: Create Release
       if: inputs.create_release == 'true' && steps.changelog.outputs.IS_EMPTY == 'false'
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ github.token }}
+      uses: softprops/action-gh-release@v2
       with:
-        tag_name: ${{ inputs.tag_name || github.ref_name }}
-        release_name: ${{ inputs.tag_name || github.ref_name }}
         body: ${{ steps.changelog.outputs.FINAL_CHANGELOG }}
+        tag_name: ${{ inputs.tag_name || github.ref_name }}
+        name: ${{ inputs.tag_name || github.ref_name }}
         draft: false
         prerelease: false
