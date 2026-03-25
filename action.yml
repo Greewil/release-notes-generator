@@ -19,14 +19,6 @@ outputs:
     description: "True if changelog is empty"
     value: ${{ steps.changelog.outputs.IS_EMPTY }}
 
-outputs:
-  changelog:
-    description: "Generated changelog content"
-    value: ${{ steps.changelog.outputs.changelog }}
-  is_empty:
-    description: "True if changelog is empty"
-    value: ${{ steps.changelog.outputs.is_empty }}
-
 runs:
   using: composite
   steps:
