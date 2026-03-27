@@ -25,6 +25,13 @@ runs:
     - name: Install RNG
       shell: bash
       run: sudo ./installer.sh -d || echo "Installation finished with warnings"
+ 
+    - name: Remove installer
+      shell: bash
+      run: |
+        rm installer.sh
+        rm gen_release_notes.sh
+        rm gen-release-notes-completion.sh
 
     - name: Verify RNG installation
       shell: bash
