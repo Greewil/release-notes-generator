@@ -48,7 +48,47 @@ To use default installation start installer with:
 Default installation selects installation directories automatically. 
 It can be useful if you don't want to select installation directories manually.
 
-## Usage
+## Usage in github actions
+
+### Install
+
+You can install release-notes-generator in your github action by calling 
+```Greewil/release-notes-generator@gha/install/v1``` action.
+
+If all you need is latest release-notes-generator version, simply add this to your workflow:
+```yaml
+- name: Install release-notes-generator
+  uses: Greewil/release-notes-generator@gha/install/v1
+```
+
+Then you can use it as basic console app.
+
+More about this github action you can read here:
+[install release-notes-generator action usage](https://github.com/Greewil/release-notes-generator/tree/gha/install/v1?tab=readme-ov-file#github-action-for-installing-release-notes-generator-tool).
+
+### Generate release notes
+/generate-release-notes
+You can generate release note by calling 
+```Greewil/release-notes-generator@gha/generate-release-notes/v1``` action:
+```yaml
+- name: Generate release notes using release-notes-generator
+  uses: Greewil/release-notes-generator@gha/generate-release-notes/v1
+```
+
+Or you can also publish generated release notes as github release:
+```yaml
+- name: Generate release with release-notes-generator
+  uses: Greewil/release-notes-generator@gha/generate-release-notes/v1
+  with:
+    create_release: 'true'
+    tag_name: "v1.0.0"
+```
+This example will generate release with tag "v1.0.0".
+
+More about this github action you can read here:
+[generate-release-notes action usage](https://github.com/Greewil/release-notes-generator/tree/gha/generate-release-notes/v1?tab=readme-ov-file#github-action-for-generating-release-based-on-commits).
+
+## Usage in command line
 
 Usage examples:
 
