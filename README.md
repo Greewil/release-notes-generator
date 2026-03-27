@@ -15,7 +15,7 @@ If you want to install specific release-notes-generator version:
 - name: Install release-notes-generator
   uses: Greewil/release-notes-generator@gha/install/v1
   with:
-    rng_version: '1.0.5'
+    rng_version: '1.0.4'
 ```
 Version could be '1.0.0' or 'v1.0.0'.
 
