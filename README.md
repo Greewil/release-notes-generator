@@ -1,4 +1,4 @@
-# release-notes-generator action for collecting project info
+# Github action for installing release-notes-generator tool
 
 A Github action for installing and configuring [release-notes-generator](https://github.com/Greewil/release-notes-generator).
 
