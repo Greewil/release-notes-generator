@@ -25,7 +25,7 @@ jobs:
       - name: get release tag_name
         id: release_version
         run: |
-          cur_version=$(./vuh.sh lv -q)
+          cur_version=$(vuh lv -q)
           echo "release version: $cur_version" 
           echo "RELEASE_VERSION=$cur_version" >> "$GITHUB_OUTPUT"
 
