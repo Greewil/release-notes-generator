@@ -2,14 +2,17 @@ name: Generate Release Notes
 inputs:
   rng_version:
     description: "Release Notes Generator version"
-    required: true
+    required: false
+    type: string
   create_release:
     description: "Whether to create a GitHub Release"
     required: false
     default: "false"
+    type: boolean
   tag_name:
     description: "The name of the tag for the release"
     required: false
+    type: string
 
 outputs:
   changelog:
