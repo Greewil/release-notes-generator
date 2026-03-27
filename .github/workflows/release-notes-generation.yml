@@ -17,16 +17,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: download vuh
-        run: |
-          curl https://raw.githubusercontent.com/Greewil/version-update-helper/${{ inputs.VUH_VERSION }}/vuh.sh -O -J -L
-          chmod +x vuh.sh
-
-#      If you want to use same workflow in another repos you should download needed version of release-notes-generator
-#      - name: download release notes generator
-#        run: |
-#          curl https://raw.githubusercontent.com/Greewil/release-notes-generator/${{ inputs.CHANGELOG_GENERATOR_VERSION }}/gen_release_notes.sh -O -J -L
-#          chmod +x gen_release_notes.sh
+      - name: Install VUH
+        uses: Greewil/version-update-helper@gha/install/v1
+        with:
+          version: "${{ inputs.VUH_VERSION }}"
 
       - name: get release tag_name
         id: release_version
@@ -34,6 +28,16 @@ jobs:
           cur_version=$(./vuh.sh lv -q)
           echo "release version: $cur_version" 
           echo "RELEASE_VERSION=$cur_version" >> "$GITHUB_OUTPUT"
+
+##      If you want to use same workflow in another repos you can just use this github action:
+#      - name: Generate release with release-notes-generator
+#        uses: Greewil/release-notes-generator@gha/generate-release-notes/v1
+#        with:
+#          rng_version: "${{ inputs.CHANGELOG_GENERATOR_VERSION }}"
+#          create_release: 'true'
+#          tag_name: "v${{ steps.release_version.outputs.RELEASE_VERSION }}"
+
+#       The following code is just for additional testing of this tool.
 
       - name: generate release notes
         id: changelog
