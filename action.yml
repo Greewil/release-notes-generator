@@ -4,7 +4,7 @@ description: Install RNG
 inputs:
   rng_version:
     description: "Release Notes Generator version (e.g., v1.0.3 or 1.0.3)"
-    required: true
+    required: false
 
 runs:
   using: composite
@@ -13,7 +13,11 @@ runs:
       shell: bash
       run: |
         VERSION="${{ inputs.rng_version }}"
-        if [[ $VERSION != v* ]]; then VERSION="v$VERSION"; fi
+        if [ -n "$VERSION" ]; then
+          if [[ $VERSION != v* ]]; then VERSION="v$VERSION"; fi
+        else
+          VERSION="main"
+        fi
         BASE_URL="https://raw.githubusercontent.com/Greewil/release-notes-generator/${VERSION}"
         curl -f -L -o installer.sh "${BASE_URL}/installer.sh"
         curl -f -L -o gen_release_notes.sh "${BASE_URL}/gen_release_notes.sh"
